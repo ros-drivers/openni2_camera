@@ -29,27 +29,17 @@
  *      Author: Julius Kammerl (jkammerl@willowgarage.com)
  */
 
-#ifndef OPENNI2_DEVICE_INFO_H_
-#define OPENNI2_DEVICE_INFO_H_
+#include "openni2_camera/openni2_driver.h"
 
-#include <ostream>
+int main(int argc, char **argv){
 
-#include <boost/cstdint.hpp>
+  ros::init(argc, argv, "openni2_camera");
+  ros::NodeHandle n;
+  ros::NodeHandle pnh("~");
 
-namespace openni2_wrapper
-{
+  openni2_wrapper::OpenNI2Driver drv(n, pnh);
 
-struct OpenNI2DeviceInfo
-{
-  std::string uri_;
-  std::string vendor_;
-  std::string name_;
-  uint16_t vendor_id_;
-  uint16_t product_id_;
-};
+  ros::spin();
 
-std::ostream& operator << (std::ostream& stream, const OpenNI2DeviceInfo& device_info);
-
+  return 0;
 }
-
-#endif /* DRIVER_H_ */

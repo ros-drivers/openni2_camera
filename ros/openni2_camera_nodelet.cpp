@@ -29,27 +29,30 @@
  *      Author: Julius Kammerl (jkammerl@willowgarage.com)
  */
 
-#ifndef OPENNI2_DEVICE_INFO_H_
-#define OPENNI2_DEVICE_INFO_H_
+#include "openni2_camera/openni2_driver.h"
+#include <nodelet/nodelet.h>
 
-#include <ostream>
-
-#include <boost/cstdint.hpp>
-
-namespace openni2_wrapper
+namespace OpenNI2Camera
 {
 
-struct OpenNI2DeviceInfo
+class OpenNI2DriverNodelet : public nodelet::Nodelet
 {
-  std::string uri_;
-  std::string vendor_;
-  std::string name_;
-  uint16_t vendor_id_;
-  uint16_t product_id_;
+public:
+  OpenNI2DriverNodelet()  {};
+
+  ~OpenNI2DriverNodelet() {}
+
+private:
+  virtual void onInit()
+  {
+    lp.reset(new openni2_wrapper::OpenNI2Driver(getNodeHandle(), getPrivateNodeHandle()));
+  };
+
+  boost::shared_ptr<openni2_wrapper::OpenNI2Driver> lp;
 };
-
-std::ostream& operator << (std::ostream& stream, const OpenNI2DeviceInfo& device_info);
 
 }
 
-#endif /* DRIVER_H_ */
+
+#include <pluginlib/class_list_macros.h>
+PLUGINLIB_DECLARE_CLASS(OpenNI2Camera, OpenNI2DriverNodelet, OpenNI2Camera::OpenNI2DriverNodelet, nodelet::Nodelet);

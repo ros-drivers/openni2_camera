@@ -95,6 +95,10 @@ private:
 
   sensor_msgs::ImageConstPtr rawToFloatingPointConversion(sensor_msgs::ImageConstPtr raw_image);
 
+  void setIRVideoMode();
+  void setColorVideoMode();
+  void setDepthVideoMode();
+
   ros::NodeHandle& nh_;
   ros::NodeHandle& pnh_;
 
@@ -128,7 +132,6 @@ private:
 
   std::string color_info_url_, ir_info_url_;
 
-
   bool color_depth_synchronization_;
   bool depth_registration_;
 
@@ -138,6 +141,8 @@ private:
   double depth_ir_offset_x_;
   double depth_ir_offset_y_;
   int z_offset_mm_;
+
+  ros::Duration depth_time_offset_;
 
   int data_skip_;
 

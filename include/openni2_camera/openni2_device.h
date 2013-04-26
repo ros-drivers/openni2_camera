@@ -130,6 +130,7 @@ public:
   bool getAutoWhiteBalance() const;
 
 protected:
+  void shutdown();
 
   boost::shared_ptr<openni::VideoStream> getIRVideoStream() const throw (OpenNI2Exception);
   boost::shared_ptr<openni::VideoStream> getColorVideoStream() const throw (OpenNI2Exception);

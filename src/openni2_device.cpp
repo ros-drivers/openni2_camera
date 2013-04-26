@@ -86,6 +86,8 @@ OpenNI2Device::~OpenNI2Device()
 {
   stopAllStreams();
 
+  shutdown();
+
   openni_device_->close();
 }
 
@@ -293,9 +295,6 @@ void OpenNI2Device::stopIRStream()
     ir_video_stream_->removeNewFrameListener(ir_frame_listener.get());
 
     ir_video_stream_->stop();
-    ir_video_stream_->destroy();
-
-    ir_video_stream_.reset();
   }
 }
 void OpenNI2Device::stopColorStream()
@@ -307,9 +306,6 @@ void OpenNI2Device::stopColorStream()
     color_video_stream_->removeNewFrameListener(color_frame_listener.get());
 
     color_video_stream_->stop();
-    color_video_stream_->destroy();
-
-    color_video_stream_.reset();
   }
 }
 void OpenNI2Device::stopDepthStream()
@@ -321,10 +317,20 @@ void OpenNI2Device::stopDepthStream()
     depth_video_stream_->removeNewFrameListener(depth_frame_listener.get());
 
     depth_video_stream_->stop();
+  }
+}
+
+void OpenNI2Device::shutdown()
+{
+  if (ir_video_stream_.get()!=0)
+    ir_video_stream_->destroy();
+
+  if (color_video_stream_.get()!=0)
+    color_video_stream_->destroy();
+
+  if (depth_video_stream_.get()!=0)
     depth_video_stream_->destroy();
 
-    depth_video_stream_.reset();
-  }
 }
 
 bool OpenNI2Device::isIRStreamStarted()

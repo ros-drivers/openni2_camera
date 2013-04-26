@@ -61,6 +61,8 @@ public:
 private:
   openni::VideoFrameRef m_frame;
 
+  uint64_t prev_device_time_;
+
   FrameCallbackFunction callback_;
 };
 

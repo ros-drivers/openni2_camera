@@ -1,3 +1,33 @@
+/*
+ * Copyright (c) 2013, Willow Garage, Inc.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * Neither the name of the Willow Garage, Inc. nor the names of its
+ *       contributors may be used to endorse or promote products derived from
+ *       this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ *      Author: Julius Kammerl (jkammerl@willowgarage.com)
+ */
 
 #include "openni2_camera/openni2_driver.h"
 #include "openni2_camera/openni2_exception.h"
@@ -46,14 +76,13 @@ void OpenNI2Driver::advertiseROSTopics()
 {
 
   // Allow remapping namespaces rgb, ir, depth, depth_registered
-  image_transport::ImageTransport it(pnh_);
-  ros::NodeHandle color_nh(pnh_, "rgb");
+  ros::NodeHandle color_nh(nh_, "rgb");
   image_transport::ImageTransport color_it(color_nh);
-  ros::NodeHandle ir_nh(pnh_, "ir");
+  ros::NodeHandle ir_nh(nh_, "ir");
   image_transport::ImageTransport ir_it(ir_nh);
-  ros::NodeHandle depth_nh(pnh_, "depth");
+  ros::NodeHandle depth_nh(nh_, "depth");
   image_transport::ImageTransport depth_it(depth_nh);
-  ros::NodeHandle depth_raw_nh(pnh_, "depth");
+  ros::NodeHandle depth_raw_nh(nh_, "depth");
   image_transport::ImageTransport depth_raw_it(depth_raw_nh);
   // Advertise all published topics
 
@@ -116,6 +145,7 @@ void OpenNI2Driver::configCb(Config &config, uint32_t level)
   depth_ir_offset_y_ = config.depth_ir_offset_y;
   z_offset_mm_ = config.z_offset_mm;
 
+  depth_time_offset_ = ros::Duration(config.depth_time_offset);
 
   if (lookupVideoModeFromDynConfig(config.ir_mode, ir_video_mode_)<0)
   {
@@ -156,13 +186,8 @@ void OpenNI2Driver::configCb(Config &config, uint32_t level)
   old_config_ = config;
 }
 
-void OpenNI2Driver::applyConfigToOpenNIDevice()
+void OpenNI2Driver::setIRVideoMode()
 {
-
-  data_skip_ir_counter_ = 0;
-  data_skip_color_counter_= 0;
-  data_skip_depth_counter_ = 0;
-
   if (device_->isIRVideoModeSupported(ir_video_mode_))
   {
     if (ir_video_mode_ != device_->getIRVideoMode())
@@ -175,7 +200,9 @@ void OpenNI2Driver::applyConfigToOpenNIDevice()
   {
     ROS_ERROR_STREAM("Unsupported IR video mode - " << ir_video_mode_);
   }
-
+}
+void OpenNI2Driver::setColorVideoMode()
+{
   if (device_->isColorVideoModeSupported(color_video_mode_))
   {
     if (color_video_mode_ != device_->getColorVideoMode())
@@ -187,7 +214,9 @@ void OpenNI2Driver::applyConfigToOpenNIDevice()
   {
     ROS_ERROR_STREAM("Unsupported color video mode - " << color_video_mode_);
   }
-
+}
+void OpenNI2Driver::setDepthVideoMode()
+{
   if (device_->isDepthVideoModeSupported(depth_video_mode_))
   {
     if (depth_video_mode_ != device_->getDepthVideoMode())
@@ -199,6 +228,18 @@ void OpenNI2Driver::applyConfigToOpenNIDevice()
   {
     ROS_ERROR_STREAM("Unsupported depth video mode - " << depth_video_mode_);
   }
+}
+
+void OpenNI2Driver::applyConfigToOpenNIDevice()
+{
+
+  data_skip_ir_counter_ = 0;
+  data_skip_color_counter_= 0;
+  data_skip_depth_counter_ = 0;
+
+  setIRVideoMode();
+  setColorVideoMode();
+  setDepthVideoMode();
 
   if (device_->isImageRegistrationModeSupported())
   {
@@ -340,6 +381,8 @@ void OpenNI2Driver::newIRFrameCallback(sensor_msgs::ImagePtr image)
     data_skip_ir_counter_ = 0;
 
     image->header.frame_id = ir_frame_id_;
+    image->header.stamp = image->header.stamp + depth_time_offset_;
+
     pub_ir_.publish(image, getIRCameraInfo(image->width,image->height, image->header.stamp));
   }
 }
@@ -350,7 +393,9 @@ void OpenNI2Driver::newColorFrameCallback(sensor_msgs::ImagePtr image)
   {
     data_skip_color_counter_ = 0;
 
-    image->header.frame_id = ir_frame_id_;
+    image->header.frame_id = color_frame_id_;
+    image->header.stamp = image->header.stamp + depth_time_offset_;
+
     pub_color_.publish(image, getColorCameraInfo(image->width,image->height, image->header.stamp));
   }
 }
@@ -359,9 +404,23 @@ void OpenNI2Driver::newDepthFrameCallback(sensor_msgs::ImagePtr image)
 {
   if ((++data_skip_depth_counter_)%data_skip_==0)
   {
+
+    /*
+    static ros::Time prev_time;
+
+    ros::Time now = ros::Time::now();
+
+    unsigned int dur = ros::Duration(now-prev_time).toSec()*1000000;
+
+    std::cout<<dur<<std::endl;
+
+    prev_time = now;
+*/
+
     data_skip_depth_counter_ = 0;
 
     image->header.frame_id = depth_frame_id_;
+    image->header.stamp = image->header.stamp + depth_time_offset_;
 
     if (depth_raw_topic_subscribers_)
       pub_depth_raw_.publish(image, getDepthCameraInfo(image->width,image->height, image->header.stamp));

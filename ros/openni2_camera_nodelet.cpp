@@ -32,7 +32,7 @@
 #include "openni2_camera/openni2_driver.h"
 #include <nodelet/nodelet.h>
 
-namespace OpenNI2Camera
+namespace openni2_camera
 {
 
 class OpenNI2DriverNodelet : public nodelet::Nodelet
@@ -53,6 +53,5 @@ private:
 
 }
 
-
 #include <pluginlib/class_list_macros.h>
-PLUGINLIB_DECLARE_CLASS(OpenNI2Camera, OpenNI2DriverNodelet, OpenNI2Camera::OpenNI2DriverNodelet, nodelet::Nodelet);
+PLUGINLIB_DECLARE_CLASS(openni2_camera, OpenNI2DriverNodelet, openni2_camera::OpenNI2DriverNodelet, nodelet::Nodelet);

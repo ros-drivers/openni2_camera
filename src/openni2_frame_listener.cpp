@@ -11,7 +11,8 @@ namespace openni2_wrapper
 {
 
 OpenNI2FrameListener::OpenNI2FrameListener() :
-    callback_(0)
+    callback_(0),
+    prev_device_time_(0)
 {
   ros::Time::init();
 }
@@ -28,6 +29,10 @@ void OpenNI2FrameListener::onNewFrame(openni::VideoStream& stream)
 
     uint64_t device_time = m_frame.getTimestamp();
 
+    //uint64_t diff_time = device_time-prev_device_time_;
+
+    prev_device_time_ = device_time;
+
     image->width = m_frame.getWidth();
     image->height = m_frame.getHeight();
 
@@ -42,19 +47,19 @@ void OpenNI2FrameListener::onNewFrame(openni::VideoStream& stream)
     switch (video_mode.getPixelFormat())
     {
       case openni::PIXEL_FORMAT_DEPTH_1_MM:
-        image->encoding = sensor_msgs::image_encodings::MONO16;
+        image->encoding = sensor_msgs::image_encodings::TYPE_16UC1;
         image->step = sizeof(unsigned char) * 2;
         break;
       case openni::PIXEL_FORMAT_DEPTH_100_UM:
-        image->encoding = sensor_msgs::image_encodings::MONO16;
+        image->encoding = sensor_msgs::image_encodings::TYPE_16UC1;
         image->step = sizeof(unsigned char) * 2;
         break;
       case openni::PIXEL_FORMAT_SHIFT_9_2:
-        image->encoding = sensor_msgs::image_encodings::MONO16;
+        image->encoding = sensor_msgs::image_encodings::TYPE_16UC1;
         image->step = sizeof(unsigned char) * 2;
         break;
       case openni::PIXEL_FORMAT_SHIFT_9_3:
-        image->encoding = sensor_msgs::image_encodings::MONO16;
+        image->encoding = sensor_msgs::image_encodings::TYPE_16UC1;
         image->step = sizeof(unsigned char) * 2;
         break;
 

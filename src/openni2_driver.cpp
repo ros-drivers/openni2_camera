@@ -342,7 +342,7 @@ void OpenNI2Driver::depthConnectCb()
   }
   else if (!need_depth && device_->isDepthStreamStarted())
   {
-    ROS_INFO("Stopping color stream.");
+    ROS_INFO("Stopping depth stream.");
     device_->stopDepthStream();
   }
 }
@@ -419,16 +419,27 @@ void OpenNI2Driver::newDepthFrameCallback(sensor_msgs::ImagePtr image)
 
     data_skip_depth_counter_ = 0;
 
-    image->header.frame_id = depth_frame_id_;
+    sensor_msgs::CameraInfoPtr came_info;
+
+    if (depth_registration_)
+    {
+      image->header.frame_id = color_frame_id_;
+      came_info = getColorCameraInfo(image->width,image->height, image->header.stamp);
+    } else
+    {
+      image->header.frame_id = depth_frame_id_;
+      came_info = getDepthCameraInfo(image->width,image->height, image->header.stamp);
+    }
+
     image->header.stamp = image->header.stamp + depth_time_offset_;
 
     if (depth_raw_topic_subscribers_)
-      pub_depth_raw_.publish(image, getDepthCameraInfo(image->width,image->height, image->header.stamp));
+      pub_depth_raw_.publish(image, came_info);
 
     if (depth_topic_subscribers_ )
     {
       sensor_msgs::ImageConstPtr floating_point_image = rawToFloatingPointConversion(image);
-      pub_depth_.publish(floating_point_image, getDepthCameraInfo(floating_point_image->width,floating_point_image->height, floating_point_image->header.stamp));
+      pub_depth_.publish(floating_point_image, came_info);
     }
   }
 }
@@ -552,7 +563,7 @@ void OpenNI2Driver::readConfigFromParameterServer()
 
   // Camera TF frames
   pnh_.param("ir_frame_id", ir_frame_id_, std::string("/openni_ir_optical_frame"));
-  pnh_.param("color_frame_id", color_frame_id_, std::string("/openni_rgb_optical_frame"));
+  pnh_.param("rgb_frame_id", color_frame_id_, std::string("/openni_rgb_optical_frame"));
   pnh_.param("depth_frame_id", depth_frame_id_, std::string("/openni_depth_optical_frame"));
 
   ROS_DEBUG("ir_frame_id = '%s' ", ir_frame_id_.c_str());

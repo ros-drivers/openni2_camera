@@ -48,36 +48,36 @@ void OpenNI2FrameListener::onNewFrame(openni::VideoStream& stream)
     {
       case openni::PIXEL_FORMAT_DEPTH_1_MM:
         image->encoding = sensor_msgs::image_encodings::TYPE_16UC1;
-        image->step = sizeof(unsigned char) * 2;
+        image->step = sizeof(unsigned char) * 2 * image->width;
         break;
       case openni::PIXEL_FORMAT_DEPTH_100_UM:
         image->encoding = sensor_msgs::image_encodings::TYPE_16UC1;
-        image->step = sizeof(unsigned char) * 2;
+        image->step = sizeof(unsigned char) * 2 * image->width;
         break;
       case openni::PIXEL_FORMAT_SHIFT_9_2:
         image->encoding = sensor_msgs::image_encodings::TYPE_16UC1;
-        image->step = sizeof(unsigned char) * 2;
+        image->step = sizeof(unsigned char) * 2 * image->width;
         break;
       case openni::PIXEL_FORMAT_SHIFT_9_3:
         image->encoding = sensor_msgs::image_encodings::TYPE_16UC1;
-        image->step = sizeof(unsigned char) * 2;
+        image->step = sizeof(unsigned char) * 2 * image->width;
         break;
 
       case openni::PIXEL_FORMAT_RGB888:
         image->encoding = sensor_msgs::image_encodings::RGB8;
-        image->step = sizeof(unsigned char) * 3;
+        image->step = sizeof(unsigned char) * 3 * image->width;
         break;
       case openni::PIXEL_FORMAT_YUV422:
         image->encoding = sensor_msgs::image_encodings::YUV422;
-        image->step = sizeof(unsigned char) * 4;
+        image->step = sizeof(unsigned char) * 4 * image->width;
         break;
       case openni::PIXEL_FORMAT_GRAY8:
         image->encoding = sensor_msgs::image_encodings::MONO8;
-        image->step = sizeof(unsigned char) * 1;
+        image->step = sizeof(unsigned char) * 1 * image->width;
         break;
       case openni::PIXEL_FORMAT_GRAY16:
         image->encoding = sensor_msgs::image_encodings::MONO16;
-        image->step = sizeof(unsigned char) * 2;
+        image->step = sizeof(unsigned char) * 2 * image->width;
         break;
       case openni::PIXEL_FORMAT_JPEG:
       default:

@@ -27,7 +27,6 @@ message (${PC_OPENNI2_LIBRARY_DIRS})
 link_directories(${PC_OPENNI2_LIBRARY_DIRS})
 
 add_library(openni2_wrapper
-   src/openni2_camera.cpp
    src/openni2_convert.cpp
    src/openni2_device.cpp 
    src/openni2_frame_listener.cpp

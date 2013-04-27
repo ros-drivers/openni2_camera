@@ -1,0 +1,58 @@
+<!-- Load full set of processing nodelets for an OpenNI device -->
+<launch>
+
+  <!-- Name of nodelet manager, must be fully resolved -->
+  <arg name="manager" />
+
+  <arg name="respawn" default="false" />
+  
+  <arg name="rectify" default="true" />
+  
+  <!-- Remapping arguments -->
+  <arg name="rgb"              default="rgb" />
+  <arg name="ir"               default="ir" />
+  <arg name="depth"            default="depth" />
+
+  <!-- IR processing -->
+  <include file="$(find openni2_launch)/launch/includes/ir.launch"
+	   ns="$(arg ir)">
+    <arg name="manager" value="$(arg manager)" />
+    <arg name="respawn" value="$(arg respawn)" />
+    <arg name="rectify" value="$(arg rectify)" />
+    <arg name="rgb" value="$(arg rgb)" />
+    <arg name="ir" value="$(arg ir)" />
+    <arg name="depth" value="$(arg depth)" />
+  </include>
+  
+   <!-- Color processing -->
+  <include file="$(find openni2_launch)/launch/includes/color.launch"
+	   ns="$(arg rgb)">
+    <arg name="manager" value="$(arg manager)" />
+    <arg name="respawn" value="$(arg respawn)" />
+    <arg name="rectify" value="$(arg rectify)" />
+    <arg name="rgb" value="$(arg rgb)" />
+    <arg name="ir" value="$(arg ir)" />
+    <arg name="depth" value="$(arg depth)" />
+  </include>
+  
+     <!-- Pointcloud processing -->
+  <include file="$(find openni2_launch)/launch/includes/pointclouds.launch" >
+    <arg name="manager" value="$(arg manager)" /> 
+    <arg name="rgb" value="$(arg rgb)" />
+    <arg name="ir" value="$(arg ir)" />
+    <arg name="depth" value="$(arg depth)" />
+  </include>
+
+  <!-- Depth processing -->
+  <include file="$(find openni2_launch)/launch/includes/depth.launch"
+	   ns="$(arg depth)">
+    <arg name="manager" value="$(arg manager)" />
+    <arg name="respawn" value="$(arg respawn)" />
+    <arg name="rectify" value="$(arg rectify)" />    
+    <arg name="rgb" value="$(arg rgb)" />
+    <arg name="ir" value="$(arg ir)" />
+    <arg name="depth" value="$(arg depth)" />
+  </include>
+
+
+</launch>

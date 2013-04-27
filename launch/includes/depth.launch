@@ -1,0 +1,43 @@
+<!-- Load processing nodelets for the depth camera -->
+<launch>
+
+  <arg name="manager" />
+
+  <arg name="rectify" default="true" />
+
+  <arg name="respawn" default="false" />
+  
+    <!-- Remapping arguments -->
+  <arg name="rgb"              default="rgb" />
+  <arg name="ir"               default="ir" />
+  <arg name="depth"            default="depth" />
+  
+  <arg name="suffix" default="$(arg depth)_$(arg rgb)" />
+  
+  <!-- Rectified raw image -->
+  <node if="$(arg rectify)" pkg="nodelet" type="nodelet" name="rectify_depth"
+        args="load image_proc/rectify $(arg manager)"
+	respawn="$(arg respawn)">
+    <remap from="image_mono"  to="image" />
+    <remap from="image_rect"  to="image_rect" />
+
+    <!-- Use nearest neighbor (0) interpolation so we don't streak across
+	 depth boundaries -->
+    <param name="interpolation" value="0" />
+  </node>
+
+  <!-- Rectified raw image  -->
+  <node if="$(arg rectify)" pkg="nodelet" type="nodelet" name="rectify_depth_raw"
+        args="load image_proc/rectify $(arg manager)"
+	respawn="$(arg respawn)">
+    <remap from="image_mono"  to="image_raw" />
+    <remap from="image_rect"  to="image_rect_raw" />
+
+    <!-- Use nearest neighbor (0) interpolation so we don't streak across
+	 depth boundaries -->
+    <param name="interpolation" value="0" />
+  </node>
+
+
+
+</launch>

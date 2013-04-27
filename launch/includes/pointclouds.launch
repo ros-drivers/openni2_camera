@@ -1,0 +1,32 @@
+<!-- Load processing nodelets for the Color camera -->
+<launch>
+
+  <arg name="manager" />
+  <arg name="respawn" default="false" />
+
+  <arg name="points_xyz" default="true" />
+
+  <arg name="rgb"              default="rgb" />
+  <arg name="ir"               default="ir" />
+  <arg name="depth"            default="depth" />
+  
+  <arg name="suffix" default="$(arg depth)_$(arg rgb)" /> 
+    
+  <node pkg="nodelet" type="nodelet" name="points_xyzrgb_$(arg suffix)"
+        args="load depth_image_proc/point_cloud_xyzrgb $(arg manager)" respawn="$(arg respawn)">
+    <!-- Explicit topic remappings, shouldn't need all of these -->
+    <remap from="rgb/image_rect_color"        to="$(arg rgb)/image_rect" />
+    <remap from="rgb/camera_info"             to="$(arg rgb)/camera_info" />
+    <remap from="depth_registered/image_rect" to="$(arg depth)/image_rect_raw" />
+    <remap from="depth_registered/points"     to="$(arg depth)/points_xyzrgb" />
+  </node>
+  
+  <node pkg="nodelet" type="nodelet" name="points_xyz_$(arg suffix)"
+        args="load depth_image_proc/point_cloud_xyz $(arg manager)" respawn="$(arg respawn)">
+    <remap from="image_rect" to="$(arg depth)/image_rect_raw"/>  <!-- Use raw image for efficiency -->
+    <remap from="points"     to="$(arg depth)/points_xyz" />
+  </node>
+  
+  
+  
+</launch>

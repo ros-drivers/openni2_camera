@@ -145,6 +145,8 @@ void OpenNI2Driver::configCb(Config &config, uint32_t level)
   depth_ir_offset_y_ = config.depth_ir_offset_y;
   z_offset_mm_ = config.z_offset_mm;
 
+  ir_time_offset_ = ros::Duration(config.ir_time_offset);
+  color_time_offset_ = ros::Duration(config.color_time_offset);
   depth_time_offset_ = ros::Duration(config.depth_time_offset);
 
   if (lookupVideoModeFromDynConfig(config.ir_mode, ir_video_mode_)<0)
@@ -385,7 +387,7 @@ void OpenNI2Driver::newIRFrameCallback(sensor_msgs::ImagePtr image)
     data_skip_ir_counter_ = 0;
 
     image->header.frame_id = ir_frame_id_;
-    image->header.stamp = image->header.stamp + depth_time_offset_;
+    image->header.stamp = image->header.stamp + ir_time_offset_;
 
     pub_ir_.publish(image, getIRCameraInfo(image->width,image->height, image->header.stamp));
   }
@@ -398,7 +400,7 @@ void OpenNI2Driver::newColorFrameCallback(sensor_msgs::ImagePtr image)
     data_skip_color_counter_ = 0;
 
     image->header.frame_id = color_frame_id_;
-    image->header.stamp = image->header.stamp + depth_time_offset_;
+    image->header.stamp = image->header.stamp + color_time_offset_;
 
     pub_color_.publish(image, getColorCameraInfo(image->width,image->height, image->header.stamp));
   }
@@ -409,41 +411,30 @@ void OpenNI2Driver::newDepthFrameCallback(sensor_msgs::ImagePtr image)
   if ((++data_skip_depth_counter_)%data_skip_==0)
   {
 
-    /*
-    static ros::Time prev_time;
-
-    ros::Time now = ros::Time::now();
-
-    unsigned int dur = ros::Duration(now-prev_time).toSec()*1000000;
-
-    std::cout<<dur<<std::endl;
-
-    prev_time = now;
-*/
-
     data_skip_depth_counter_ = 0;
 
-    sensor_msgs::CameraInfoPtr came_info;
+
+    image->header.stamp = image->header.stamp + depth_time_offset_;
+
+    sensor_msgs::CameraInfoPtr cam_info;
 
     if (depth_registration_)
     {
       image->header.frame_id = color_frame_id_;
-      came_info = getColorCameraInfo(image->width,image->height, image->header.stamp);
+      cam_info = getColorCameraInfo(image->width,image->height, image->header.stamp);
     } else
     {
       image->header.frame_id = depth_frame_id_;
-      came_info = getDepthCameraInfo(image->width,image->height, image->header.stamp);
+      cam_info = getDepthCameraInfo(image->width,image->height, image->header.stamp);
     }
 
-    image->header.stamp = image->header.stamp + depth_time_offset_;
-
     if (depth_raw_topic_subscribers_)
-      pub_depth_raw_.publish(image, came_info);
+      pub_depth_raw_.publish(image, cam_info);
 
     if (depth_topic_subscribers_ )
     {
       sensor_msgs::ImageConstPtr floating_point_image = rawToFloatingPointConversion(image);
-      pub_depth_.publish(floating_point_image, came_info);
+      pub_depth_.publish(floating_point_image, cam_info);
     }
   }
 }

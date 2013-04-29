@@ -142,6 +142,8 @@ private:
   double depth_ir_offset_y_;
   int z_offset_mm_;
 
+  ros::Duration ir_time_offset_;
+  ros::Duration color_time_offset_;
   ros::Duration depth_time_offset_;
 
   int data_skip_;

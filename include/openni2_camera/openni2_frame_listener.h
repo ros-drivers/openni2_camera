@@ -67,7 +67,7 @@ private:
 
   FrameCallbackFunction callback_;
 
-  bool user_sevice_timer_;
+  bool user_device_timer_;
   boost::shared_ptr<OpenNI2TimerFilter> timer_filter_;
 
   double prev_time_stamp_;

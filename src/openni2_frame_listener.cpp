@@ -44,7 +44,7 @@ namespace openni2_wrapper
 
 OpenNI2FrameListener::OpenNI2FrameListener() :
     callback_(0),
-    user_sevice_timer_(false),
+    user_device_timer_(false),
     timer_filter_(new OpenNI2TimerFilter(TIME_FILTER_LENGTH)),
     prev_time_stamp_(0.0)
 {
@@ -53,9 +53,9 @@ OpenNI2FrameListener::OpenNI2FrameListener() :
 
 bool OpenNI2FrameListener::setUseDeviceTimer(bool enable)
 {
-  user_sevice_timer_ = enable;
+  user_device_timer_ = enable;
 
-  if (user_sevice_timer_)
+  if (user_device_timer_)
     timer_filter_->clear();
 }
 
@@ -69,7 +69,7 @@ void OpenNI2FrameListener::onNewFrame(openni::VideoStream& stream)
 
     ros::Time ros_now = ros::Time::now();
 
-    if (!user_sevice_timer_)
+    if (!user_device_timer_)
     {
       image->header.stamp = ros_now;
 

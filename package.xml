@@ -7,11 +7,11 @@
      and (registered) point clouds.
     </description>
 
-  <maintainer email="jkammerl@todo.todo">Julius Kammerl</maintainer>
+  <maintainer email="jkammerl@willowgarage.com">Julius Kammerl</maintainer>
 
   <license>BSD</license>
 
-  <author email="jkammerl@todo.todo">Julius Kammerl</author>
+  <author email="kammerl@willowgarage.com">Julius Kammerl</author>
 
   <buildtool_depend>catkin</buildtool_depend>
 

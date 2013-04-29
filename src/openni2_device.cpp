@@ -48,8 +48,12 @@ namespace openni2_wrapper
 {
 
 OpenNI2Device::OpenNI2Device(const std::string& device_URI) throw (OpenNI2Exception) :
-    openni_device_(), ir_video_started_(false), color_video_started_(false), depth_video_started_(false), image_registration_activated_(
-        false)
+    openni_device_(),
+    ir_video_started_(false),
+    color_video_started_(false),
+    depth_video_started_(false),
+    image_registration_activated_(false),
+    use_device_time_(false)
 {
   openni::Status rc = openni::OpenNI::initialize();
   if (rc != openni::STATUS_OK)
@@ -575,6 +579,18 @@ bool OpenNI2Device::getAutoWhiteBalance() const
   }
 
   return ret;
+}
+
+bool OpenNI2Device::setUseDeviceTimer(bool enable)
+{
+  if (ir_frame_listener)
+    ir_frame_listener->setUseDeviceTimer(enable);
+
+  if (color_frame_listener)
+    color_frame_listener->setUseDeviceTimer(enable);
+
+  if (depth_frame_listener)
+    depth_frame_listener->setUseDeviceTimer(enable);
 }
 
 void OpenNI2Device::setIRFrameCallback(FrameCallbackFunction callback)

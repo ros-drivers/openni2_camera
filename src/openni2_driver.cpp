@@ -177,6 +177,8 @@ void OpenNI2Driver::configCb(Config &config, uint32_t level)
   auto_exposure_ = config.auto_exposure;
   auto_white_balance_ = config.auto_white_balance;
 
+  use_device_time_ = config.use_device_time;
+
   data_skip_ = config.data_skip+1;
 
   applyConfigToOpenNIDevice();
@@ -283,6 +285,8 @@ void OpenNI2Driver::applyConfigToOpenNIDevice()
   {
     ROS_ERROR("Could not set auto white balance. Reason: %s", exception.what());
   }
+
+  device_->setUseDeviceTimer(use_device_time_);
 
 }
 

@@ -129,6 +129,8 @@ public:
   bool getAutoExposure() const;
   bool getAutoWhiteBalance() const;
 
+  bool setUseDeviceTimer(bool enable);
+
 protected:
   void shutdown();
 
@@ -156,6 +158,8 @@ protected:
   bool depth_video_started_;
 
   bool image_registration_activated_;
+
+  bool use_device_time_;
 
 };
 

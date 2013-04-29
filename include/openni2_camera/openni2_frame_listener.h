@@ -43,6 +43,8 @@
 namespace openni2_wrapper
 {
 
+class OpenNI2TimerFilter;
+
 class OpenNI2FrameListener : public openni::VideoStream::NewFrameListener
 {
 public:
@@ -58,12 +60,17 @@ public:
     callback_ = callback;
   }
 
+  bool setUseDeviceTimer(bool enable);
+
 private:
   openni::VideoFrameRef m_frame;
 
-  uint64_t prev_device_time_;
-
   FrameCallbackFunction callback_;
+
+  bool user_sevice_timer_;
+  boost::shared_ptr<OpenNI2TimerFilter> timer_filter_;
+
+  double prev_time_stamp_;
 };
 
 }

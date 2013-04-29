@@ -156,6 +156,8 @@ private:
   bool depth_topic_subscribers_;
   bool depth_raw_topic_subscribers_;
 
+  bool use_device_time_;
+
   Config old_config_;
 };
 

@@ -550,7 +550,7 @@ sensor_msgs::CameraInfoPtr OpenNI2Driver::getDepthCameraInfo(int width, int heig
 
 void OpenNI2Driver::readConfigFromParameterServer()
 {
-  if (pnh_.getParam("device_id", device_id_))
+  if (!pnh_.getParam("device_id", device_id_))
   {
     ROS_WARN ("~device_id is not set! Using first device.");
     device_id_ = "";

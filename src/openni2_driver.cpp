@@ -739,7 +739,7 @@ sensor_msgs::ImageConstPtr OpenNI2Driver::rawToFloatingPointConversion(sensor_ms
   new_image->height = raw_image->height;
   new_image->is_bigendian = 0;
   new_image->encoding = sensor_msgs::image_encodings::TYPE_32FC1;
-  new_image->step = sizeof(float);
+  new_image->step = sizeof(float)*raw_image->width;
 
   std::size_t data_size = new_image->width*new_image->height;
   new_image->data.resize(data_size*sizeof(float));

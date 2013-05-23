@@ -144,6 +144,7 @@ void OpenNI2Driver::configCb(Config &config, uint32_t level)
   depth_ir_offset_x_ = config.depth_ir_offset_x;
   depth_ir_offset_y_ = config.depth_ir_offset_y;
   z_offset_mm_ = config.z_offset_mm;
+  z_scaling_ = config.z_scaling;
 
   ir_time_offset_ = ros::Duration(config.ir_time_offset);
   color_time_offset_ = ros::Duration(config.color_time_offset);
@@ -413,8 +414,23 @@ void OpenNI2Driver::newDepthFrameCallback(sensor_msgs::ImagePtr image)
 
     data_skip_depth_counter_ = 0;
 
-
     image->header.stamp = image->header.stamp + depth_time_offset_;
+
+    if (z_offset_mm_ != 0)
+    {
+      uint16_t* data = reinterpret_cast<uint16_t*>(&image->data[0]);
+      for (unsigned int i = 0; i < image->width * image->height; ++i)
+        if (data[i] != 0)
+              data[i] += z_offset_mm_;
+    }
+
+    if (fabs(z_scaling_ - 1.0) > 1e-6)
+    {
+      uint16_t* data = reinterpret_cast<uint16_t*>(&image->data[0]);
+      for (unsigned int i = 0; i < image->width * image->height; ++i)
+        if (data[i] != 0)
+              data[i] = static_cast<uint16_t>(data[i] * z_scaling_);
+    }
 
     sensor_msgs::CameraInfoPtr cam_info;
 
@@ -429,7 +445,9 @@ void OpenNI2Driver::newDepthFrameCallback(sensor_msgs::ImagePtr image)
     }
 
     if (depth_raw_topic_subscribers_)
+    {
       pub_depth_raw_.publish(image, cam_info);
+    }
 
     if (depth_topic_subscribers_ )
     {
@@ -486,13 +504,13 @@ sensor_msgs::CameraInfoPtr OpenNI2Driver::getColorCameraInfo(int width, int heig
     {
       // Use uncalibrated values
       ROS_WARN_ONCE("Image resolution doesn't match calibration of the RGB camera. Using default parameters.");
-      info = getDefaultCameraInfo(width, height, device_->getColorFocalLength(width));
+      info = getDefaultCameraInfo(width, height, device_->getColorFocalLength(height));
     }
   }
   else
   {
     // If uncalibrated, fill in default values
-    info = getDefaultCameraInfo(width, height, device_->getColorFocalLength(width));
+    info = getDefaultCameraInfo(width, height, device_->getColorFocalLength(height));
   }
 
   // Fill in header
@@ -514,13 +532,13 @@ sensor_msgs::CameraInfoPtr OpenNI2Driver::getIRCameraInfo(int width, int height,
     {
       // Use uncalibrated values
       ROS_WARN_ONCE("Image resolution doesn't match calibration of the IR camera. Using default parameters.");
-      info = getDefaultCameraInfo(width, height, device_->getIRFocalLength(width));
+      info = getDefaultCameraInfo(width, height, device_->getIRFocalLength(height));
     }
   }
   else
   {
     // If uncalibrated, fill in default values
-    info = getDefaultCameraInfo(width, height, device_->getDepthFocalLength(width));
+    info = getDefaultCameraInfo(width, height, device_->getDepthFocalLength(height));
   }
 
   // Fill in header

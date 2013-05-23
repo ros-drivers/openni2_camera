@@ -119,9 +119,9 @@ public:
   void setColorFrameCallback(FrameCallbackFunction callback);
   void setDepthFrameCallback(FrameCallbackFunction callback);
 
-  float getIRFocalLength (int output_x_resolution) const;
-  float getColorFocalLength (int output_x_resolution) const;
-  float getDepthFocalLength (int output_x_resolution) const;
+  float getIRFocalLength (int output_y_resolution) const;
+  float getColorFocalLength (int output_y_resolution) const;
+  float getDepthFocalLength (int output_y_resolution) const;
 
   void setAutoExposure(bool enable) throw (OpenNI2Exception);
   void setAutoWhiteBalance(bool enable) throw (OpenNI2Exception);

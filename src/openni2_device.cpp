@@ -132,40 +132,40 @@ bool OpenNI2Device::isValid() const
   return (openni_device_.get() != 0) && openni_device_->isValid();
 }
 
-float OpenNI2Device::getIRFocalLength(int output_x_resolution) const
+float OpenNI2Device::getIRFocalLength(int output_y_resolution) const
 {
   float focal_length = 0.0f;
   boost::shared_ptr<openni::VideoStream> stream = getColorVideoStream();
 
   if (stream)
   {
-    focal_length = (float)output_x_resolution / (2 * tan(stream->getVerticalFieldOfView() / 2));
+    focal_length = (float)output_y_resolution / (2 * tan(stream->getVerticalFieldOfView() / 2));
   }
 
   return focal_length;
 }
 
-float OpenNI2Device::getColorFocalLength(int output_x_resolution) const
+float OpenNI2Device::getColorFocalLength(int output_y_resolution) const
 {
   float focal_length = 0.0f;
   boost::shared_ptr<openni::VideoStream> stream = getColorVideoStream();
 
   if (stream)
   {
-    focal_length = (float)output_x_resolution / (2 * tan(stream->getVerticalFieldOfView() / 2));
+    focal_length = (float)output_y_resolution / (2 * tan(stream->getVerticalFieldOfView() / 2));
   }
 
   return focal_length;
 }
 
-float OpenNI2Device::getDepthFocalLength(int output_x_resolution) const
+float OpenNI2Device::getDepthFocalLength(int output_y_resolution) const
 {
   float focal_length = 0.0f;
   boost::shared_ptr<openni::VideoStream> stream = getColorVideoStream();
 
   if (stream)
   {
-    focal_length = (float)output_x_resolution / (2 * tan(stream->getVerticalFieldOfView() / 2));
+    focal_length = (float)output_y_resolution / (2 * tan(stream->getVerticalFieldOfView() / 2));
   }
 
   return focal_length;

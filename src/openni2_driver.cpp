@@ -571,7 +571,7 @@ void OpenNI2Driver::readConfigFromParameterServer()
   if (!pnh_.getParam("device_id", device_id_))
   {
     ROS_WARN ("~device_id is not set! Using first device.");
-    device_id_ = "";
+    device_id_ = "#1";
   }
 
   // Camera TF frames
@@ -588,13 +588,45 @@ void OpenNI2Driver::readConfigFromParameterServer()
 
 }
 
+std::string OpenNI2Driver::resolveDeviceURI(const std::string& device_id) throw(OpenNI2Exception)
+{
+  std::string device_URI;
+  boost::shared_ptr<std::vector<std::string> > available_device_URIs = 
+    device_manager_->getConnectedDeviceURIs();
+
+  // look for '#<number>' format
+  if (device_id_.size() > 1 && device_id_[0] == '#')
+  {
+    std::istringstream device_number_str(device_id_.substr(1));
+    int device_number;
+    device_number_str >> device_number;
+    int device_index = device_number - 1; // #1 refers to first device
+    if (device_index >= available_device_URIs->size() || device_index < 0)
+    {
+      THROW_OPENNI_EXCEPTION(
+          "Invalid device number %i, there are %zu devices connected.",
+          device_number, available_device_URIs->size());
+    }
+    else
+    {
+      return available_device_URIs->at(device_index);
+    }
+  }
+  // everything else is treated as device_URI directly
+  else
+  {
+    return device_id_;
+  }
+}
+
 void OpenNI2Driver::initDevice()
 {
   while (ros::ok() && !device_)
   {
     try
     {
-      device_ = device_manager_->getDevice(device_id_);
+      std::string device_URI = resolveDeviceURI(device_id_);
+      device_ = device_manager_->getDevice(device_URI);
     }
     catch (const OpenNI2Exception& exception)
     {

@@ -129,7 +129,7 @@ public:
   bool getAutoExposure() const;
   bool getAutoWhiteBalance() const;
 
-  bool setUseDeviceTimer(bool enable);
+  void setUseDeviceTimer(bool enable);
 
 protected:
   void shutdown();

@@ -247,6 +247,7 @@ void OpenNI2Device::startIRStream()
 
   if (stream)
   {
+    stream->setMirroringEnabled(false);
     stream->start();
     stream->addNewFrameListener(ir_frame_listener.get());
     ir_video_started_ = true;
@@ -260,6 +261,7 @@ void OpenNI2Device::startColorStream()
 
   if (stream)
   {
+    stream->setMirroringEnabled(false);
     stream->start();
     stream->addNewFrameListener(color_frame_listener.get());
     color_video_started_ = true;
@@ -271,6 +273,7 @@ void OpenNI2Device::startDepthStream()
 
   if (stream)
   {
+    stream->setMirroringEnabled(false);
     stream->start();
     stream->addNewFrameListener(depth_frame_listener.get());
     depth_video_started_ = true;
@@ -581,7 +584,7 @@ bool OpenNI2Device::getAutoWhiteBalance() const
   return ret;
 }
 
-bool OpenNI2Device::setUseDeviceTimer(bool enable)
+void OpenNI2Device::setUseDeviceTimer(bool enable)
 {
   if (ir_frame_listener)
     ir_frame_listener->setUseDeviceTimer(enable);

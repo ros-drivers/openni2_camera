@@ -195,47 +195,47 @@ void OpenNI2Driver::configCb(Config &config, uint32_t level)
   old_config_ = config;
 }
 
-void OpenNI2Driver::setIRVideoMode()
+void OpenNI2Driver::setIRVideoMode(const OpenNI2VideoMode& ir_video_mode)
 {
-  if (device_->isIRVideoModeSupported(ir_video_mode_))
+  if (device_->isIRVideoModeSupported(ir_video_mode))
   {
-    if (ir_video_mode_ != device_->getIRVideoMode())
+    if (ir_video_mode != device_->getIRVideoMode())
     {
-      device_->setIRVideoMode(ir_video_mode_);
+      device_->setIRVideoMode(ir_video_mode);
     }
 
   }
   else
   {
-    ROS_ERROR_STREAM("Unsupported IR video mode - " << ir_video_mode_);
+    ROS_ERROR_STREAM("Unsupported IR video mode - " << ir_video_mode);
   }
 }
-void OpenNI2Driver::setColorVideoMode()
+void OpenNI2Driver::setColorVideoMode(const OpenNI2VideoMode& color_video_mode)
 {
-  if (device_->isColorVideoModeSupported(color_video_mode_))
+  if (device_->isColorVideoModeSupported(color_video_mode))
   {
-    if (color_video_mode_ != device_->getColorVideoMode())
+    if (color_video_mode != device_->getColorVideoMode())
     {
-      device_->setColorVideoMode(color_video_mode_);
+      device_->setColorVideoMode(color_video_mode);
     }
   }
   else
   {
-    ROS_ERROR_STREAM("Unsupported color video mode - " << color_video_mode_);
+    ROS_ERROR_STREAM("Unsupported color video mode - " << color_video_mode);
   }
 }
-void OpenNI2Driver::setDepthVideoMode()
+void OpenNI2Driver::setDepthVideoMode(const OpenNI2VideoMode& depth_video_mode)
 {
-  if (device_->isDepthVideoModeSupported(depth_video_mode_))
+  if (device_->isDepthVideoModeSupported(depth_video_mode))
   {
-    if (depth_video_mode_ != device_->getDepthVideoMode())
+    if (depth_video_mode != device_->getDepthVideoMode())
     {
-      device_->setDepthVideoMode(depth_video_mode_);
+      device_->setDepthVideoMode(depth_video_mode);
     }
   }
   else
   {
-    ROS_ERROR_STREAM("Unsupported depth video mode - " << depth_video_mode_);
+    ROS_ERROR_STREAM("Unsupported depth video mode - " << depth_video_mode);
   }
 }
 
@@ -246,9 +246,9 @@ void OpenNI2Driver::applyConfigToOpenNIDevice()
   data_skip_color_counter_= 0;
   data_skip_depth_counter_ = 0;
 
-  setIRVideoMode();
-  setColorVideoMode();
-  setDepthVideoMode();
+  setIRVideoMode(ir_video_mode_);
+  setColorVideoMode(color_video_mode_);
+  setDepthVideoMode(depth_video_mode_);
 
   if (device_->isImageRegistrationModeSupported())
   {

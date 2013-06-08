@@ -97,9 +97,9 @@ private:
 
   sensor_msgs::ImageConstPtr rawToFloatingPointConversion(sensor_msgs::ImageConstPtr raw_image);
 
-  void setIRVideoMode();
-  void setColorVideoMode();
-  void setDepthVideoMode();
+  void setIRVideoMode(const OpenNI2VideoMode& ir_video_mode);
+  void setColorVideoMode(const OpenNI2VideoMode& color_video_mode);
+  void setDepthVideoMode(const OpenNI2VideoMode& depth_video_mode);
 
   ros::NodeHandle& nh_;
   ros::NodeHandle& pnh_;

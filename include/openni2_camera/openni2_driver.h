@@ -97,9 +97,9 @@ private:
 
   sensor_msgs::ImageConstPtr rawToFloatingPointConversion(sensor_msgs::ImageConstPtr raw_image);
 
-  void setIRVideoMode();
-  void setColorVideoMode();
-  void setDepthVideoMode();
+  void setIRVideoMode(const OpenNI2VideoMode& ir_video_mode);
+  void setColorVideoMode(const OpenNI2VideoMode& color_video_mode);
+  void setDepthVideoMode(const OpenNI2VideoMode& depth_video_mode);
 
   ros::NodeHandle& nh_;
   ros::NodeHandle& pnh_;
@@ -158,8 +158,10 @@ private:
   bool auto_exposure_;
   bool auto_white_balance_;
 
-  bool depth_topic_subscribers_;
-  bool depth_raw_topic_subscribers_;
+  bool ir_subscribers_;
+  bool color_subscribers_;
+  bool depth_subscribers_;
+  bool depth_raw_subscribers_;
 
   bool use_device_time_;
 

@@ -48,7 +48,11 @@ OpenNI2Driver::OpenNI2Driver(ros::NodeHandle& n, ros::NodeHandle& pnh) :
     config_init_(false),
     data_skip_ir_counter_(0),
     data_skip_color_counter_(0),
-    data_skip_depth_counter_ (0)
+    data_skip_depth_counter_ (0),
+    ir_subscribers_(false),
+    color_subscribers_(false),
+    depth_subscribers_(false),
+    depth_raw_subscribers_(false)
 {
 
   genVideoModeTableMap();
@@ -296,9 +300,10 @@ void OpenNI2Driver::applyConfigToOpenNIDevice()
 void OpenNI2Driver::colorConnectCb()
 {
   boost::lock_guard<boost::mutex> lock(connect_mutex_);
-  bool need_color = pub_color_.getNumSubscribers() > 0;
 
-  if (need_color && !device_->isColorStreamStarted())
+  color_subscribers_ = pub_color_.getNumSubscribers() > 0;
+
+  if (color_subscribers_ && !device_->isColorStreamStarted())
   {
     // Can't stream IR and RGB at the same time. Give RGB preference.
     if (device_->isIRStreamStarted())
@@ -314,7 +319,7 @@ void OpenNI2Driver::colorConnectCb()
     device_->startColorStream();
 
   }
-  else if (!need_color && device_->isColorStreamStarted())
+  else if (!color_subscribers_ && device_->isColorStreamStarted())
   {
     ROS_INFO("Stopping color stream.");
     device_->stopColorStream();
@@ -335,10 +340,10 @@ void OpenNI2Driver::depthConnectCb()
 {
   boost::lock_guard<boost::mutex> lock(connect_mutex_);
 
-  depth_topic_subscribers_ = pub_depth_.getNumSubscribers() > 0;
-  depth_raw_topic_subscribers_ = pub_depth_raw_.getNumSubscribers() > 0;
+  depth_subscribers_ = pub_depth_.getNumSubscribers() > 0;
+  depth_raw_subscribers_ = pub_depth_raw_.getNumSubscribers() > 0;
 
-  bool need_depth = depth_topic_subscribers_ || depth_raw_topic_subscribers_;
+  bool need_depth = depth_subscribers_ || depth_raw_subscribers_;
 
   if (need_depth && !device_->isDepthStreamStarted())
   {
@@ -357,9 +362,10 @@ void OpenNI2Driver::depthConnectCb()
 void OpenNI2Driver::irConnectCb()
 {
   boost::lock_guard<boost::mutex> lock(connect_mutex_);
-  bool need_ir = pub_ir_.getNumSubscribers() > 0;
 
-  if (need_ir && !device_->isIRStreamStarted())
+  ir_subscribers_ = pub_ir_.getNumSubscribers() > 0;
+
+  if (ir_subscribers_ && !device_->isIRStreamStarted())
   {
     // Can't stream IR and RGB at the same time
     if (device_->isColorStreamStarted())
@@ -374,7 +380,7 @@ void OpenNI2Driver::irConnectCb()
       device_->startIRStream();
     }
   }
-  else if (!need_ir && device_->isIRStreamStarted())
+  else if (!ir_subscribers_ && device_->isIRStreamStarted())
   {
     ROS_INFO("Stopping IR stream.");
     device_->stopIRStream();
@@ -387,10 +393,13 @@ void OpenNI2Driver::newIRFrameCallback(sensor_msgs::ImagePtr image)
   {
     data_skip_ir_counter_ = 0;
 
-    image->header.frame_id = ir_frame_id_;
-    image->header.stamp = image->header.stamp + ir_time_offset_;
+    if (ir_subscribers_)
+    {
+      image->header.frame_id = ir_frame_id_;
+      image->header.stamp = image->header.stamp + ir_time_offset_;
 
-    pub_ir_.publish(image, getIRCameraInfo(image->width,image->height, image->header.stamp));
+      pub_ir_.publish(image, getIRCameraInfo(image->width, image->height, image->header.stamp));
+    }
   }
 }
 
@@ -400,10 +409,13 @@ void OpenNI2Driver::newColorFrameCallback(sensor_msgs::ImagePtr image)
   {
     data_skip_color_counter_ = 0;
 
-    image->header.frame_id = color_frame_id_;
-    image->header.stamp = image->header.stamp + color_time_offset_;
+    if (color_subscribers_)
+    {
+      image->header.frame_id = color_frame_id_;
+      image->header.stamp = image->header.stamp + color_time_offset_;
 
-    pub_color_.publish(image, getColorCameraInfo(image->width,image->height, image->header.stamp));
+      pub_color_.publish(image, getColorCameraInfo(image->width, image->height, image->header.stamp));
+    }
   }
 }
 
@@ -414,45 +426,48 @@ void OpenNI2Driver::newDepthFrameCallback(sensor_msgs::ImagePtr image)
 
     data_skip_depth_counter_ = 0;
 
-    image->header.stamp = image->header.stamp + depth_time_offset_;
-
-    if (z_offset_mm_ != 0)
+    if (depth_raw_subscribers_||depth_subscribers_)
     {
-      uint16_t* data = reinterpret_cast<uint16_t*>(&image->data[0]);
-      for (unsigned int i = 0; i < image->width * image->height; ++i)
-        if (data[i] != 0)
-              data[i] += z_offset_mm_;
-    }
+      image->header.stamp = image->header.stamp + depth_time_offset_;
 
-    if (fabs(z_scaling_ - 1.0) > 1e-6)
-    {
-      uint16_t* data = reinterpret_cast<uint16_t*>(&image->data[0]);
-      for (unsigned int i = 0; i < image->width * image->height; ++i)
-        if (data[i] != 0)
-              data[i] = static_cast<uint16_t>(data[i] * z_scaling_);
-    }
+      if (z_offset_mm_ != 0)
+      {
+        uint16_t* data = reinterpret_cast<uint16_t*>(&image->data[0]);
+        for (unsigned int i = 0; i < image->width * image->height; ++i)
+          if (data[i] != 0)
+                data[i] += z_offset_mm_;
+      }
 
-    sensor_msgs::CameraInfoPtr cam_info;
+      if (fabs(z_scaling_ - 1.0) > 1e-6)
+      {
+        uint16_t* data = reinterpret_cast<uint16_t*>(&image->data[0]);
+        for (unsigned int i = 0; i < image->width * image->height; ++i)
+          if (data[i] != 0)
+                data[i] = static_cast<uint16_t>(data[i] * z_scaling_);
+      }
 
-    if (depth_registration_)
-    {
-      image->header.frame_id = color_frame_id_;
-      cam_info = getColorCameraInfo(image->width,image->height, image->header.stamp);
-    } else
-    {
-      image->header.frame_id = depth_frame_id_;
-      cam_info = getDepthCameraInfo(image->width,image->height, image->header.stamp);
-    }
+      sensor_msgs::CameraInfoPtr cam_info;
 
-    if (depth_raw_topic_subscribers_)
-    {
-      pub_depth_raw_.publish(image, cam_info);
-    }
+      if (depth_registration_)
+      {
+        image->header.frame_id = color_frame_id_;
+        cam_info = getColorCameraInfo(image->width,image->height, image->header.stamp);
+      } else
+      {
+        image->header.frame_id = depth_frame_id_;
+        cam_info = getDepthCameraInfo(image->width,image->height, image->header.stamp);
+      }
 
-    if (depth_topic_subscribers_ )
-    {
-      sensor_msgs::ImageConstPtr floating_point_image = rawToFloatingPointConversion(image);
-      pub_depth_.publish(floating_point_image, cam_info);
+      if (depth_raw_subscribers_)
+      {
+        pub_depth_raw_.publish(image, cam_info);
+      }
+
+      if (depth_subscribers_ )
+      {
+        sensor_msgs::ImageConstPtr floating_point_image = rawToFloatingPointConversion(image);
+        pub_depth_.publish(floating_point_image, cam_info);
+      }
     }
   }
 }

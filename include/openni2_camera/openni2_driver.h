@@ -158,8 +158,10 @@ private:
   bool auto_exposure_;
   bool auto_white_balance_;
 
-  bool depth_topic_subscribers_;
-  bool depth_raw_topic_subscribers_;
+  bool ir_subscribers_;
+  bool color_subscribers_;
+  bool depth_subscribers_;
+  bool depth_raw_subscribers_;
 
   bool use_device_time_;
 

@@ -4,8 +4,8 @@
   <!-- "camera" should uniquely identify the device. All topics are pushed down
        into the "camera" namespace, and it is prepended to tf frame ids. -->
   <arg name="camera" default="camera" />
-  <arg name="rgb_frame_id"   default="/$(arg camera)_rgb_optical_frame" />
-  <arg name="depth_frame_id" default="/$(arg camera)_depth_optical_frame" />
+  <arg name="rgb_frame_id"   default="$(arg camera)_rgb_optical_frame" />
+  <arg name="depth_frame_id" default="$(arg camera)_depth_optical_frame" />
 
   <arg name="device_id" default="#1" />
 

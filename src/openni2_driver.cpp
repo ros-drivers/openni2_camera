@@ -609,7 +609,7 @@ std::string OpenNI2Driver::resolveDeviceURI(const std::string& device_id) throw(
   boost::shared_ptr<std::vector<std::string> > available_device_URIs = 
     device_manager_->getConnectedDeviceURIs();
 
-  // look for '#<number>' format (specifies device id)
+  // look for '#<number>' format
   if (device_id_.size() > 1 && device_id_[0] == '#')
   {
     std::istringstream device_number_str(device_id_.substr(1));
@@ -627,17 +627,49 @@ std::string OpenNI2Driver::resolveDeviceURI(const std::string& device_id) throw(
       return available_device_URIs->at(device_index);
     }
   }
-  // look for '@<number>' format (specifies bus id)
-  else if (device_id_.size() > 1 && device_id_[0] == '@')
+  // look for '<bus>@<number>' format
+  //   <bus>    is usb bus id, typically start at 1
+  //   <number> is the device number, for consistency with openni_camera, these start at 1
+  //               although 0 specifies "any device on this bus"
+  else if (device_id_.size() > 1 && device_id_.find('@') != std::string::npos)
   {
+    // get index of @ character
+    size_t index = device_id_.find('@');
+    if (index <= 0)
+    {
+      THROW_OPENNI_EXCEPTION(
+        "%s is not a valid device URI, you must give the bus number before the @.",
+        device_id_.c_str());
+    }
+    if (index >= device_id_.size() - 1)
+    {
+      THROW_OPENNI_EXCEPTION(
+        "%s is not a valid device URI, you must give a number after the @, specify 0 for first device",
+        device_id_.c_str());
+    }
+
+    // pull out device number on bus
+    std::istringstream device_number_str(device_id_.substr(index+1));
+    int device_number;
+    device_number_str >> device_number;
+
+    // reorder to @<bus>
+    std::string bus = device_id_.substr(0, index);
+    bus.insert(0, "@");
+
     for (size_t i = 0; i < available_device_URIs->size(); ++i)
     {
       std::string s = (*available_device_URIs)[i];
-      if (s.find(device_id_) != std::string::npos)
+      if (s.find(bus) != std::string::npos)
       {
-        return s;
+        // this matches our bus, check device number
+        --device_number;
+        if (device_number <= 0)
+          return s;
       }
     }
+
+    THROW_OPENNI_EXCEPTION("Device not found %s", device_id_.c_str());
   }
   // everything else is treated as device_URI directly
   else

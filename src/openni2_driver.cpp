@@ -609,7 +609,7 @@ std::string OpenNI2Driver::resolveDeviceURI(const std::string& device_id) throw(
   boost::shared_ptr<std::vector<std::string> > available_device_URIs = 
     device_manager_->getConnectedDeviceURIs();
 
-  // look for '#<number>' format
+  // look for '#<number>' format (specifies device id)
   if (device_id_.size() > 1 && device_id_[0] == '#')
   {
     std::istringstream device_number_str(device_id_.substr(1));
@@ -625,6 +625,18 @@ std::string OpenNI2Driver::resolveDeviceURI(const std::string& device_id) throw(
     else
     {
       return available_device_URIs->at(device_index);
+    }
+  }
+  // look for '@<number>' format (specifies bus id)
+  else if (device_id_.size() > 1 && device_id_[0] == '@')
+  {
+    for (size_t i = 0; i < available_device_URIs->size(); ++i)
+    {
+      std::string s = (*available_device_URIs)[i];
+      if (s.find(device_id_) != std::string::npos)
+      {
+        return s;
+      }
     }
   }
   // everything else is treated as device_URI directly

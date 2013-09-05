@@ -94,7 +94,7 @@
 
   <!-- Load reasonable defaults for the relative pose between cameras -->
   <include if="$(arg publish_tf)"
-	   file="$(find openni2_launch)/launch/kinect_frames.launch">
+	   file="$(find rgbd_launch)/launch/kinect_frames.launch">
     <arg name="camera" value="$(arg camera)" />
   </include>
 

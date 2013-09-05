@@ -23,6 +23,10 @@
   <arg name="ir"               default="ir" />
   <arg name="depth"            default="depth" />
 
+  <!-- Machine -->
+  <machine name="localhost" address="localhost" env-loader="/opt/ros/hydro/env.sh"/>
+  <arg name="machine"          default="localhost" />
+
   <!-- Optionally suppress loading the driver nodelet and/or publishing the default tf
        tree. Useful if you are playing back recorded raw data from a bag, or are
        supplying a more accurate tf tree from calibration. -->
@@ -51,6 +55,7 @@
   <include file="$(find rgbd_launch)/launch/includes/manager.launch.xml">
     <arg name="name" value="$(arg manager)" />
     <arg name="debug" value="$(arg debug)" />
+    <arg name="machine" value="$(arg machine)" />
     <arg name="num_worker_threads"  value="$(arg num_worker_threads)" />
   </include>
 

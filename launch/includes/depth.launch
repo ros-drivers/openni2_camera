@@ -1,43 +1,23 @@
 <!-- Load processing nodelets for the depth camera -->
 <launch>
 
-  <arg name="manager" />
+  <!-- have all the old parameters to prevent roslaunch errors -->
+  <arg name="manager" default="" />
+  <arg name="points_xyz" default="" />
+  <arg name="rectify" default="" />
+  <arg name="respawn" default="" />
+  <arg name="depth" default="" />
 
-  <arg name="rectify" default="true" />
-
-  <arg name="respawn" default="false" />
-  
-    <!-- Remapping arguments -->
-  <arg name="rgb"              default="rgb" />
-  <arg name="ir"               default="ir" />
-  <arg name="depth"            default="depth" />
-  
-  <arg name="suffix" default="$(arg depth)_$(arg rgb)" />
-  
-  <!-- Rectified raw image -->
-  <node if="$(arg rectify)" pkg="nodelet" type="nodelet" name="rectify_depth"
-        args="load image_proc/rectify $(arg manager)"
-	respawn="$(arg respawn)">
-    <remap from="image_mono"  to="image" />
-    <remap from="image_rect"  to="image_rect" />
-
-    <!-- Use nearest neighbor (0) interpolation so we don't streak across
-	 depth boundaries -->
-    <param name="interpolation" value="0" />
+  <!-- deprecation notice -->
+  <node name="depth_deprecated"
+        pkg="rgbd_launch"
+        type="hydro-upgrade-notice"
+        required="true">
+    <param name="name" value="depth.launch" />
+    <param name="from_pkg" value="openni2_launch" />
+    <param name="to_pkg" value="rgbd_launch" />
+    <param name="from_pkg_path" value="launch/includes/depth.launch" />
+    <param name="to_pkg_path" value="launch/includes/depth.launch.xml" />
   </node>
-
-  <!-- Rectified raw image  -->
-  <node if="$(arg rectify)" pkg="nodelet" type="nodelet" name="rectify_depth_raw"
-        args="load image_proc/rectify $(arg manager)"
-	respawn="$(arg respawn)">
-    <remap from="image_mono"  to="image_raw" />
-    <remap from="image_rect"  to="image_rect_raw" />
-
-    <!-- Use nearest neighbor (0) interpolation so we don't streak across
-	 depth boundaries -->
-    <param name="interpolation" value="0" />
-  </node>
-
-
 
 </launch>

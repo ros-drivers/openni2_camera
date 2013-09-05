@@ -1,21 +1,21 @@
 <!-- Load processing nodelets for the Color camera -->
 <launch>
 
-  <arg name="manager" />
-  <arg name="respawn" default="false" />
+  <!-- have all the old parameters to prevent roslaunch errors -->
+  <arg name="manager" default="" />
+  <arg name="respawn" default="" />
+  <arg name="rgb" default="" />
 
-  <arg name="rectify" default="true" />
-  
-  <!-- Remapping arguments -->
-  <arg name="rgb"              default="rgb" />
-  <arg name="ir"               default="ir" />
-  <arg name="depth"            default="depth" />
-
-  <!-- Color rectified image -->
-  <node if="$(arg rectify)" pkg="nodelet" type="nodelet" name="rectify_color"
-        args="load image_proc/rectify $(arg manager)"
-        respawn="$(arg respawn)">
-    <remap from="image_mono" to="image" />
-  </node>  
+  <!-- deprecation notice -->
+  <node name="rgb_deprecated"
+        pkg="rgbd_launch"
+        type="hydro-upgrade-notice"
+        required="true">
+    <param name="name" value="rgb.launch" />
+    <param name="from_pkg" value="openni2_launch" />
+    <param name="to_pkg" value="rgbd_launch" />
+    <param name="from_pkg_path" value="launch/includes/color.launch" />
+    <param name="to_pkg_path" value="launch/includes/rgb.launch.xml" />
+  </node>
 
 </launch>

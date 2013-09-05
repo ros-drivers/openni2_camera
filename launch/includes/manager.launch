@@ -1,19 +1,18 @@
-<!-- Start nodelet manager -->
 <launch>
 
-  <!-- Name here should NOT be globally qualified (node names cannot contain /) -->
-  <arg name="name" />
+  <!-- have all the old parameters to prevent roslaunch errors -->
+  <arg name="manager" default="" />
+  <arg name="debug" default="" />
 
-  <!-- Optionally launch manager in GDB, for debugging -->
-  <arg name="debug" default="false" />
-  <arg if="$(arg debug)" name="launch_prefix" value="xterm -e gdb --args" />
-  <arg unless="$(arg debug)" name="launch_prefix" value="" />
-  <!-- Also globally disable bond heartbeat timeout in debug mode, so everything
-       doesn't die when you hit a break point -->
-  <param if="$(arg debug)" name="/bond_disable_heartbeat_timeout" value="true" />
-
-  <!-- Nodelet manager -->
-  <node pkg="nodelet" type="nodelet" name="$(arg name)" args="manager"
-        output="screen" launch-prefix="$(arg launch_prefix)" />
-
+  <!-- deprecation notice -->
+  <node name="manager_deprecated"
+        pkg="rgbd_launch"
+        type="hydro-upgrade-notice"
+        required="true">
+    <param name="name" value="manager.launch" />
+    <param name="from_pkg" value="openni2_launch" />
+    <param name="to_pkg" value="rgbd_launch" />
+    <param name="from_pkg_path" value="launch/includes/manager.launch" />
+    <param name="to_pkg_path" value="launch/includes/manager.launch.xml" />
+  </node>
 </launch>

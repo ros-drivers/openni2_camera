@@ -1,58 +1,22 @@
-<!-- Load full set of processing nodelets for an OpenNI device -->
 <launch>
 
-  <!-- Name of nodelet manager, must be fully resolved -->
-  <arg name="manager" />
+  <!-- have all the old parameters to prevent roslaunch errors -->
+  <arg name="manager" default="" />
+  <arg name="respawn" default="" />
+  <arg name="rgb" default="" />
+  <arg name="ir" default="" />
+  <arg name="depth" default="" />
 
-  <arg name="respawn" default="false" />
-  
-  <arg name="rectify" default="true" />
-  
-  <!-- Remapping arguments -->
-  <arg name="rgb"              default="rgb" />
-  <arg name="ir"               default="ir" />
-  <arg name="depth"            default="depth" />
-
-  <!-- IR processing -->
-  <include file="$(find openni2_launch)/launch/includes/ir.launch"
-	   ns="$(arg ir)">
-    <arg name="manager" value="$(arg manager)" />
-    <arg name="respawn" value="$(arg respawn)" />
-    <arg name="rectify" value="$(arg rectify)" />
-    <arg name="rgb" value="$(arg rgb)" />
-    <arg name="ir" value="$(arg ir)" />
-    <arg name="depth" value="$(arg depth)" />
-  </include>
-  
-   <!-- Color processing -->
-  <include file="$(find openni2_launch)/launch/includes/color.launch"
-	   ns="$(arg rgb)">
-    <arg name="manager" value="$(arg manager)" />
-    <arg name="respawn" value="$(arg respawn)" />
-    <arg name="rectify" value="$(arg rectify)" />
-    <arg name="rgb" value="$(arg rgb)" />
-    <arg name="ir" value="$(arg ir)" />
-    <arg name="depth" value="$(arg depth)" />
-  </include>
-  
-     <!-- Pointcloud processing -->
-  <include file="$(find openni2_launch)/launch/includes/pointclouds.launch" >
-    <arg name="manager" value="$(arg manager)" /> 
-    <arg name="rgb" value="$(arg rgb)" />
-    <arg name="ir" value="$(arg ir)" />
-    <arg name="depth" value="$(arg depth)" />
-  </include>
-
-  <!-- Depth processing -->
-  <include file="$(find openni2_launch)/launch/includes/depth.launch"
-	   ns="$(arg depth)">
-    <arg name="manager" value="$(arg manager)" />
-    <arg name="respawn" value="$(arg respawn)" />
-    <arg name="rectify" value="$(arg rectify)" />    
-    <arg name="rgb" value="$(arg rgb)" />
-    <arg name="ir" value="$(arg ir)" />
-    <arg name="depth" value="$(arg depth)" />
-  </include>
-
+  <!-- deprecation notice -->
+  <node name="processing_deprecated"
+        pkg="rgbd_launch"
+        type="hydro-upgrade-notice"
+        required="true">
+    <param name="name" value="processing.launch" />
+    <param name="from_pkg" value="openni2_launch" />
+    <param name="to_pkg" value="rgbd_launch" />
+    <param name="from_pkg_path" value="launch/includes/processing.launch" />
+    <param name="to_pkg_path" value="launch/includes/processing.launch.xml" />
+  </node>
 
 </launch>

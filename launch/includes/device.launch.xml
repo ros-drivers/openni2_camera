@@ -22,6 +22,7 @@
   <arg name="rgb"              default="rgb" />
   <arg name="ir"               default="ir" />
   <arg name="depth"            default="depth" />
+  <arg name="depth_registered" default="depth_registered" />
 
   <!-- Driver nodelet -->
   <node pkg="nodelet" type="nodelet" name="driver"
@@ -41,6 +42,10 @@
     <remap from="ir" to="$(arg ir)" />
     <remap from="rgb" to="$(arg rgb)" />
     <remap from="depth" to="$(arg depth)" />
+    <remap from="depth_registered" to="$(arg depth_registered)" />
+
+    <remap from="$(arg rgb)/image" to="$(arg rgb)/image_raw" />
+    <remap from="$(arg depth)/image" to="$(arg depth_registered)/image_raw" />
   </node>
 
 </launch>

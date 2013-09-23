@@ -18,6 +18,9 @@
   <arg name="rgb_camera_info_url"   default="" />
   <arg name="depth_camera_info_url" default="" />
 
+  <!-- Hardware depth registration -->
+  <arg name="depth_registration" default="false" />
+
   <!-- Arguments for remapping all device namespaces -->
   <arg name="rgb"              default="rgb" />
   <arg name="ir"               default="ir" />
@@ -75,15 +78,16 @@
       <arg name="ir"                    value="$(arg ir)" />
       <arg name="depth"                 value="$(arg depth)" />
       <arg name="respawn"               value="$(arg respawn)" />
+      <arg name="depth_registration"    value="$(arg depth_registration)" />
     </include>
 
     <!-- Load standard constellation of processing nodelets -->
     <include file="$(find rgbd_launch)/launch/includes/processing.launch.xml">
-      <arg name="manager"               value="$(arg manager)" />
-      <arg name="rgb"                   value="$(arg rgb)" />
-      <arg name="ir"                    value="$(arg ir)" />
-      <arg name="depth"                 value="$(arg depth)" />
-      <arg name="respawn"               value="$(arg respawn)" />
+      <arg name="manager"                         value="$(arg manager)" />
+      <arg name="rgb"                             value="$(arg rgb)" />
+      <arg name="ir"                              value="$(arg ir)" />
+      <arg name="depth"                           value="$(arg depth)" />
+      <arg name="respawn"                         value="$(arg respawn)" />
       <arg name="rgb_processing"                  value="$(arg rgb_processing)" />
       <arg name="debayer_processing"              value="$(arg debayer_processing)" />
       <arg name="ir_processing"                   value="$(arg ir_processing)" />

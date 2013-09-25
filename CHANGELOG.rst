@@ -2,8 +2,8 @@
 Changelog for package openni2_launch
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.1 (2013-09-25)
+------------------
 * Properly namespace the nodelet manager
 
 0.1.0 (2013-09-10)

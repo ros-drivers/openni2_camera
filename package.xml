@@ -1,6 +1,6 @@
 <package>
   <name>openni2_launch</name>
-  <version>0.1.1</version>
+  <version>0.1.2</version>
   <description>
     Launch files to start the openni2_camera drivers using rgbd_launch.
   </description>

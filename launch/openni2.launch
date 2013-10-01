@@ -48,8 +48,10 @@
   <arg name="depth_registered_processing"     default="true" />
   <arg name="disparity_processing"            default="false" />
   <arg name="disparity_registered_processing" default="false" />
-  <arg name="hw_registered_processing"        default="true" />
-  <arg name="sw_registered_processing"        default="false" />
+  <arg name="hw_registered_processing"        default="true" if="$(arg depth_registration)" />
+  <arg name="sw_registered_processing"        default="false" if="$(arg depth_registration)" />
+  <arg name="hw_registered_processing"        default="false" unless="$(arg depth_registration)" />
+  <arg name="sw_registered_processing"        default="true" unless="$(arg depth_registration)" />
 
   <!-- Disable bond topics by default -->
   <arg name="respawn" default="false" />

@@ -23,7 +23,6 @@ include_directories(include
                     ${PC_OPENNI2_INCLUDE_DIRS}
                     )
 
-message ("${PC_OPENNI2_LIBRARY_DIRS}")
 link_directories(${PC_OPENNI2_LIBRARY_DIRS})
 
 add_library(openni2_wrapper

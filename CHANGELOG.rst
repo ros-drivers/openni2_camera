@@ -2,8 +2,8 @@
 Changelog for package openni2_camera
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.2 (2014-02-03)
+------------------
 * Fix CMake error.
 * Contributors: Benjamin Chretien, Michael Ferguson
 

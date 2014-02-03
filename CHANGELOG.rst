@@ -2,6 +2,11 @@
 Changelog for package openni2_camera
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix CMake error.
+* Contributors: Benjamin Chretien, Michael Ferguson
+
 0.1.1 (2013-11-13)
 ------------------
 * Fixed default value of ir_mode. Thanks @nxdefiant

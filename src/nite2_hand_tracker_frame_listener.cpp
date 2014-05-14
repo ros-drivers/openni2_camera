@@ -19,7 +19,7 @@ void NiTE2HandTrackerFrameListener::onNewFrame(nite::HandTracker& handTracker)
 {
   if ( handTracker.isValid() )
   {
-    nite::Status niteRc;
+    nite::Status niteRc;    
     niteRc = handTracker.readFrame(&handTrackerFrame_);
     if (niteRc != nite::STATUS_OK)
     {
@@ -27,8 +27,12 @@ void NiTE2HandTrackerFrameListener::onNewFrame(nite::HandTracker& handTracker)
     }
     else
     {
-      //@TODO: Check for gestures
-      callback_(handTrackerFrame_);
+      if ( handTrackerFrame_.isValid() )
+      {
+        callback_(handTrackerFrame_);
+      }
+      else
+        ROS_WARN("Skipping hand tracker frame as it is not valid");
     }
   }
 }

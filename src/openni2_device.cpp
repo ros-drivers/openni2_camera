@@ -93,7 +93,9 @@ OpenNI2Device::OpenNI2Device(const std::string& device_URI) throw (OpenNI2Except
   color_frame_listener = boost::make_shared<OpenNI2FrameListener>();
   depth_frame_listener = boost::make_shared<OpenNI2FrameListener>();
   if ( has_nite_ )
+  {
     hand_tracker_frame_listener_ = boost::make_shared<nite2_wrapper::NiTE2HandTrackerFrameListener>();
+  }
 }
 
 OpenNI2Device::~OpenNI2Device()
@@ -304,8 +306,17 @@ void OpenNI2Device::startDepthStream()
 
 void OpenNI2Device::startHandTracker()
 {
+  //if the hand tracker object already exists
+  if ( hand_tracker_ )
+  {
+    hand_tracker_->startGestureDetection(nite::GESTURE_WAVE);
+    hand_tracker_->startGestureDetection(nite::GESTURE_CLICK);
+    hand_tracker_started_ = true;
+    return;
+  }
+
   if ( !has_nite_ )
-      THROW_OPENNI_EXCEPTION("Not starting hand tracking because NiTE2 could not be initialized");
+    THROW_OPENNI_EXCEPTION("Not starting hand tracking because NiTE2 could not be initialized");
 
   boost::shared_ptr<nite::HandTracker> hand_tracker = getHandTracker();
 
@@ -313,10 +324,9 @@ void OpenNI2Device::startHandTracker()
   {
     hand_tracker->addNewFrameListener(hand_tracker_frame_listener_.get());
     hand_tracker->startGestureDetection(nite::GESTURE_WAVE);
-    hand_tracker->startGestureDetection(nite::GESTURE_CLICK);
+    hand_tracker->startGestureDetection(nite::GESTURE_CLICK);    
     hand_tracker_started_ = true;
   }
-
 }
 
 void OpenNI2Device::stopAllStreams()
@@ -363,10 +373,16 @@ void OpenNI2Device::stopDepthStream()
 
 void OpenNI2Device::stopHandTracker()
 {
-  if (hand_tracker_.get() != NULL )
+
+  if ( hand_tracker_started_ )
   {
+    hand_tracker_->stopGestureDetection(nite::GESTURE_WAVE);
+    hand_tracker_->stopGestureDetection(nite::GESTURE_CLICK);
+    //@TODO: right now the hand tracker is not stopped as then when restarted the readFrame
+    //       function crashes
+//    hand_tracker_->removeNewFrameListener(hand_tracker_frame_listener_.get());
+//    hand_tracker_->destroy();
     hand_tracker_started_ = false;
-    hand_tracker_->destroy();
   }
 }
 
@@ -720,7 +736,7 @@ boost::shared_ptr<openni::VideoStream> OpenNI2Device::getDepthVideoStream() cons
 }
 
 boost::shared_ptr<nite::HandTracker> OpenNI2Device::getHandTracker() const throw (OpenNI2Exception)
-{
+{  
   if ( !has_nite_ )
     THROW_OPENNI_EXCEPTION("Not creating hand tracking because NiTE2 could not be initialized");
 
@@ -729,8 +745,7 @@ boost::shared_ptr<nite::HandTracker> OpenNI2Device::getHandTracker() const throw
     THROW_OPENNI_EXCEPTION("Not creating hand tracking because device has not been initialized");
   }
 
-  hand_tracker_.reset(new nite::HandTracker);
-
+  hand_tracker_ = boost::make_shared<nite::HandTracker>();
   nite::Status niteRc = hand_tracker_->create(openni_device_.get());
   if (niteRc != nite::STATUS_OK)
   {

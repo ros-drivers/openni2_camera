@@ -54,6 +54,18 @@ class VideoStream;
 class SensorInfo;
 }
 
+namespace nite
+{
+  class HandTracker;
+  class HandTrackerFrameRef;
+}
+
+namespace nite2_wrapper
+{
+  class NiTE2HandTrackerFrameListener;  
+  typedef boost::function<void(nite::HandTrackerFrameRef handTrackerFrame)> HandTrackerFrameCallbackFunction;
+}
+
 namespace openni2_wrapper
 {
 
@@ -80,20 +92,24 @@ public:
   bool hasIRSensor() const;
   bool hasColorSensor() const;
   bool hasDepthSensor() const;
+  bool hasHandTracker() const;
 
   void startIRStream();
   void startColorStream();
   void startDepthStream();
+  void startHandTracker();
 
   void stopAllStreams();
 
   void stopIRStream();
   void stopColorStream();
   void stopDepthStream();
+  void stopHandTracker();
 
   bool isIRStreamStarted();
   bool isColorStreamStarted();
   bool isDepthStreamStarted();
+  bool isHandTrackerStarted();
 
   bool isImageRegistrationModeSupported() const;
   void setImageRegistrationMode(bool enabled) throw (OpenNI2Exception);
@@ -118,6 +134,7 @@ public:
   void setIRFrameCallback(FrameCallbackFunction callback);
   void setColorFrameCallback(FrameCallbackFunction callback);
   void setDepthFrameCallback(FrameCallbackFunction callback);
+  void setHandTrackerFrameCallback(nite2_wrapper::HandTrackerFrameCallbackFunction callback);
 
   float getIRFocalLength (int output_y_resolution) const;
   float getColorFocalLength (int output_y_resolution) const;
@@ -137,6 +154,7 @@ protected:
   boost::shared_ptr<openni::VideoStream> getIRVideoStream() const throw (OpenNI2Exception);
   boost::shared_ptr<openni::VideoStream> getColorVideoStream() const throw (OpenNI2Exception);
   boost::shared_ptr<openni::VideoStream> getDepthVideoStream() const throw (OpenNI2Exception);
+  boost::shared_ptr<nite::HandTracker>   getHandTracker() const throw (OpenNI2Exception);
 
   boost::shared_ptr<openni::Device> openni_device_;
   boost::shared_ptr<openni::DeviceInfo> device_info_;
@@ -144,10 +162,12 @@ protected:
   boost::shared_ptr<OpenNI2FrameListener> ir_frame_listener;
   boost::shared_ptr<OpenNI2FrameListener> color_frame_listener;
   boost::shared_ptr<OpenNI2FrameListener> depth_frame_listener;
+  boost::shared_ptr<nite2_wrapper::NiTE2HandTrackerFrameListener> hand_tracker_frame_listener_;
 
   mutable boost::shared_ptr<openni::VideoStream> ir_video_stream_;
   mutable boost::shared_ptr<openni::VideoStream> color_video_stream_;
   mutable boost::shared_ptr<openni::VideoStream> depth_video_stream_;
+  mutable boost::shared_ptr<nite::HandTracker> hand_tracker_;
 
   mutable std::vector<OpenNI2VideoMode> ir_video_modes_;
   mutable std::vector<OpenNI2VideoMode> color_video_modes_;
@@ -156,10 +176,13 @@ protected:
   bool ir_video_started_;
   bool color_video_started_;
   bool depth_video_started_;
+  bool hand_tracker_started_;
+  bool has_nite_;
 
   bool image_registration_activated_;
 
-  bool use_device_time_;
+  bool use_device_time_;      
+
 
 };
 

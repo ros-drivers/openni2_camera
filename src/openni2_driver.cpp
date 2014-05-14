@@ -29,8 +29,14 @@
  *      Author: Julius Kammerl (jkammerl@willowgarage.com)
  */
 
+// PAL headers
+#include <pal_vision_msgs/Gesture.h>
+
 #include "openni2_camera/openni2_driver.h"
 #include "openni2_camera/openni2_exception.h"
+
+// NiTE 2 headers
+#include "NiTE-2/NiTE.h"
 
 #include <sensor_msgs/image_encodings.h>
 #include <sensor_msgs/distortion_models.h>
@@ -117,6 +123,12 @@ void OpenNI2Driver::advertiseROSTopics()
     ros::SubscriberStatusCallback rssc = boost::bind(&OpenNI2Driver::depthConnectCb, this);
     pub_depth_raw_ = depth_it.advertiseCamera("image_raw", 1, itssc, itssc, rssc, rssc);
     pub_depth_ = depth_raw_it.advertiseCamera("image", 1, itssc, itssc, rssc, rssc);
+  }
+
+  if ( device_->hasHandTracker() )
+  {
+    ros::SubscriberStatusCallback rssc = boost::bind(&OpenNI2Driver::handTrackerConnectCb, this);
+    pub_gestures_ = nh_.advertise<pal_vision_msgs::Gesture>("gestures", 1, rssc, rssc);
   }
 
   ////////// CAMERA INFO MANAGER
@@ -336,8 +348,19 @@ void OpenNI2Driver::colorConnectCb()
   }
 }
 
-void OpenNI2Driver::depthConnectCb()
+std::string getGestureName( nite::GestureType type )
 {
+  if ( type == nite::GESTURE_WAVE )
+    return "Wave";
+
+  if ( type == nite::GESTURE_CLICK )
+    return "Click";
+
+  return "unknown";
+}
+
+void OpenNI2Driver::depthConnectCb()
+{  
   boost::lock_guard<boost::mutex> lock(connect_mutex_);
 
   depth_subscribers_ = pub_depth_.getNumSubscribers() > 0;
@@ -386,6 +409,29 @@ void OpenNI2Driver::irConnectCb()
     device_->stopIRStream();
   }
 }
+
+void OpenNI2Driver::handTrackerConnectCb()
+{
+  boost::lock_guard<boost::mutex> lock(connect_mutex_);
+
+  gestures_subscribers_ = pub_gestures_.getNumSubscribers() > 0;
+
+  bool need_hand_tracker = gestures_subscribers_;
+
+  if (gestures_subscribers_ && !device_->isHandTrackerStarted())
+  {
+    device_->setHandTrackerFrameCallback(boost::bind(&OpenNI2Driver::newHandTrackerFrameCallback, this, _1));
+
+    ROS_INFO("Starting hand tracker.");
+    device_->startHandTracker();
+  }
+  else if (!need_hand_tracker && device_->isHandTrackerStarted())
+  {
+    ROS_INFO("Stopping hand tracker.");
+    device_->stopHandTracker();
+  }
+}
+
 
 void OpenNI2Driver::newIRFrameCallback(sensor_msgs::ImagePtr image)
 {
@@ -472,6 +518,31 @@ void OpenNI2Driver::newDepthFrameCallback(sensor_msgs::ImagePtr image)
   }
 }
 
+void OpenNI2Driver::newHandTrackerFrameCallback(nite::HandTrackerFrameRef handTrackerFrame)
+{
+  const nite::Array<nite::GestureData>& gestures = handTrackerFrame.getGestures();
+  ros::Time now = ros::Time::now();
+  for (int i = 0; i < gestures.getSize(); ++i)
+  {
+    if ( gestures[i].isComplete() )
+    {
+      pal_vision_msgs::Gesture msg;
+      msg.header.stamp = now;
+      msg.header.frame_id = depth_frame_id_;
+      msg.gestureId = getGestureName(gestures[i].getType());
+      msg.position3D.x   = gestures[i].getCurrentPosition().x / 1000;
+      msg.position3D.y   = gestures[i].getCurrentPosition().y / 1000;
+      msg.position3D.z   = gestures[i].getCurrentPosition().z / 1000;
+
+      ROS_INFO_STREAM("Gesture: " << msg.gestureId <<
+                      " at point (" << msg.position3D.x << ", " <<
+                      msg.position3D.y << ", " << msg.position3D.z << ")");
+
+      pub_gestures_.publish(msg);
+    }
+  }
+}
+
 // Methods to get calibration parameters for the various cameras
 sensor_msgs::CameraInfoPtr OpenNI2Driver::getDefaultCameraInfo(int width, int height, double f) const
 {
@@ -515,7 +586,7 @@ sensor_msgs::CameraInfoPtr OpenNI2Driver::getColorCameraInfo(int width, int heig
   if (color_info_manager_->isCalibrated())
   {
     info = boost::make_shared<sensor_msgs::CameraInfo>(color_info_manager_->getCameraInfo());
-    if ( info->width != width )
+    if ( static_cast<int>(info->width) != width )
     {
       // Use uncalibrated values
       ROS_WARN_ONCE("Image resolution doesn't match calibration of the RGB camera. Using default parameters.");
@@ -543,7 +614,7 @@ sensor_msgs::CameraInfoPtr OpenNI2Driver::getIRCameraInfo(int width, int height,
   if (ir_info_manager_->isCalibrated())
   {
     info = boost::make_shared<sensor_msgs::CameraInfo>(ir_info_manager_->getCameraInfo());
-    if ( info->width != width )
+    if ( static_cast<int>(info->width) != width )
     {
       // Use uncalibrated values
       ROS_WARN_ONCE("Image resolution doesn't match calibration of the IR camera. Using default parameters.");
@@ -616,7 +687,7 @@ std::string OpenNI2Driver::resolveDeviceURI(const std::string& device_id) throw(
     int device_number;
     device_number_str >> device_number;
     int device_index = device_number - 1; // #1 refers to first device
-    if (device_index >= available_device_URIs->size() || device_index < 0)
+    if (device_index >= static_cast<int>(available_device_URIs->size()) || device_index < 0)
     {
       THROW_OPENNI_EXCEPTION(
           "Invalid device number %i, there are %zu devices connected.",
@@ -676,6 +747,8 @@ std::string OpenNI2Driver::resolveDeviceURI(const std::string& device_id) throw(
   {
     return device_id_;
   }
+
+  return "";
 }
 
 void OpenNI2Driver::initDevice()

@@ -34,7 +34,7 @@
 
 #include <deque>
 
-#include "OpenNI.h"
+#include "OpenNI-2/OpenNI.h"
 
 namespace openni2_wrapper
 {

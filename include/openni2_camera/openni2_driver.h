@@ -69,6 +69,7 @@ private:
   void newIRFrameCallback(sensor_msgs::ImagePtr image);
   void newColorFrameCallback(sensor_msgs::ImagePtr image);
   void newDepthFrameCallback(sensor_msgs::ImagePtr image);
+  void newHandTrackerFrameCallback(nite::HandTrackerFrameRef handTrackerFrame);
 
   // Methods to get calibration parameters for the various cameras
   sensor_msgs::CameraInfoPtr getDefaultCameraInfo(int width, int height, double f) const;
@@ -87,6 +88,7 @@ private:
   void colorConnectCb();
   void depthConnectCb();
   void irConnectCb();
+  void handTrackerConnectCb();
 
   void configCb(Config &config, uint32_t level);
 
@@ -162,10 +164,14 @@ private:
   bool color_subscribers_;
   bool depth_subscribers_;
   bool depth_raw_subscribers_;
+  bool gestures_subscribers_;
 
   bool use_device_time_;
 
   Config old_config_;
+
+  //NiTE hand tracking and gesture recognition  
+  ros::Publisher pub_gestures_;
 };
 
 }

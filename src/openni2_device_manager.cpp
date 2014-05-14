@@ -41,7 +41,7 @@
 #include <set>
 #include <string>
 
-#include "OpenNI.h"
+#include "OpenNI-2/OpenNI.h"
 
 namespace openni2_wrapper
 {
@@ -239,6 +239,8 @@ std::ostream& operator << (std::ostream& stream, const OpenNI2DeviceManager& dev
                                      ", Product ID: " << it->product_id_ <<
                                       ")" << std::endl;
   }
+
+  return stream;
 }
 
 

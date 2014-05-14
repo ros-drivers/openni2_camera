@@ -82,6 +82,10 @@ rosrun image_view image_view image:=/camera/rgb/image_raw
 How to visualize the depth image
 --------------------------------
 
+```
+rosrun image_view image_view image:=/camera/depth/image
+```
+
 How to test gesture recognition
 -------------------------------
 

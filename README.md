@@ -11,50 +11,55 @@ This package derives from https://github.com/OpenNI/OpenNI2 and includes NiTE 2.
 Requirements
 ============
 
-Linux Ubuntu 12.04 32-bit
--------------------------
+Linux Ubuntu 12.04 32-bit with ROS hydro
+----------------------------------------
 
 * OpenNI-Linux-x86-2.2 (version 2.2.0.33)
 * NiTE-Linux-x86-2.2   (version 2.2.0.10)
+* pal_msgs
+* openni2_launch
 
-**Installation**
+### Installation
 
-*OpenNI-2.2*
+#### OpenNI-2.2
 
 Right now the following files are alread included so you may skip the following steps:
 
-From OpenNI-Linux-x86-2.2.0.33.tar.zip:
+From OpenNI-Linux-x86-2.2.0.33.tar.zip: 
 
-- Copy Redist/libOpenNI2.so to openni2_camera/lib
-- Copy Redist/OpenNI2 to openni2_camera/lib
-- Copy Include/Linux-x86 to openni2_camera/include/OpenNI-2
-- Copy Include/Driver to openni2_camera/include/OpenNI-2
+Copy Redist/libOpenNI2.so to openni2_camera/lib  
+Copy Redist/OpenNI2 to openni2_camera/lib  
+Copy Include/Linux-x86 to openni2_camera/include/OpenNI-2  
+Copy Include/Driver to openni2_camera/include/OpenNI-2  
 
-*NiTE-2.2*
+#### NiTE-2.2
 
 Right now the following files are alread included so you may skip the following steps:
 
 From NiTE-Linux-x86-2.2.tar.zip:
 
-* Copy libNiTE2.so to openni2_camera/lib
-* Copy Include/* to openni2_camera/include/NiTE-2
+Copy libNiTE2.so to openni2_camera/lib  
+Copy Include/* to openni2_camera/include/NiTE-2  
 
-pal_msgs
---------
+#### pal_msgs
 
-Clone the following repository in your catkin workspace:
-
-```
-https://github.com/pal-robotics/pal_msgs
-```
-
-openni2_launch
---------------
 
 Clone the following repository in your catkin workspace:
 
 ```
-https://github.com/ros-drivers/openni2_launch
+git clone git@github.com:pal-robotics/pal_msgs.git
+cd pal_msgs
+git checkout hydro-devel
+```
+
+#### openni2_launch
+
+Clone the following repository in your catkin workspace:
+
+```
+git clone https://github.com/ros-drivers/openni2_launch.git
+cd openni2_launch
+git checkout hydro-devel
 ```
 
 How to

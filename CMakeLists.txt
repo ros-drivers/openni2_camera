@@ -79,5 +79,13 @@ install(FILES openni2_nodelets.xml
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
+# install provided Openni2 and NiTE2 binaries
+install(DIRECTORY "lib/OpenNI2"
+        DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION})
+
+install(FILES "lib/libOpenNI2.so" "lib/libNiTE2.so"
+        DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION})
+
+
 
 

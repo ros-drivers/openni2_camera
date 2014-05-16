@@ -65,6 +65,7 @@ OpenNI2Device::OpenNI2Device(const std::string& device_URI) throw (OpenNI2Except
   if (rc != openni::STATUS_OK)
     THROW_OPENNI_EXCEPTION("Initialize failed\n%s\n", openni::OpenNI::getExtendedError());
 
+  std::cout << std::endl << "NiTE2 Initialization" << std::endl << std::endl;
   //Initialize NiTE2
   nite::Status niteRc = nite::NiTE::initialize();
   if (niteRc != nite::STATUS_OK)

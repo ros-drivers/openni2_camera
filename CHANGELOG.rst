@@ -2,8 +2,8 @@
 Changelog for package openni2_launch
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.2.0 (2014-05-20)
+------------------
 * Remove machine arg, as it is not necessary.
 * Add tf_prefix same as openni
 * Defaults for depth processing are set apropriately for both hardware and software registration.

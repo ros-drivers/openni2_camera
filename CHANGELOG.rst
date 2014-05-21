@@ -2,6 +2,13 @@
 Changelog for package openni2_launch
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Remove machine arg, as it is not necessary.
+* Add tf_prefix same as openni
+* Defaults for depth processing are set apropriately for both hardware and software registration.
+* Contributors: Libor Wagner, Mark Pitchless, Michael Ferguson, Piyush Khandelwal
+
 0.1.2 (2013-09-30)
 ------------------
 * Expose driver parameters. Note: depth_registration is now off by default.

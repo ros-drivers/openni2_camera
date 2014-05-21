@@ -110,13 +110,44 @@ public:
   {
     boost::mutex::scoped_lock l(device_mutex_);
 
-    ROS_INFO("Device \"%s\" connected\n", pInfo->getUri());
+    const std::string serial = getSerial(pInfo->getUri());
+    const OpenNI2DeviceInfo device_info_wrapped = openni2_convert(pInfo, serial);
 
-    const OpenNI2DeviceInfo device_info_wrapped = openni2_convert(pInfo);
+    ROS_INFO("Device \"%s\" with serial number \"%s\" connected\n", pInfo->getUri(), serial.c_str());
 
     // make sure it does not exist in set before inserting
     device_set_.erase(device_info_wrapped);
     device_set_.insert(device_info_wrapped);
+  }
+
+  virtual std::string getSerial(const std::string Uri)
+  {
+    openni::Device openni_device;
+    std::string ret;
+
+    // we need to open the device to query the serial number
+    if (Uri.length() > 0 && openni_device.open(Uri.c_str()) == openni::STATUS_OK)
+    {
+      int serial_len = 100;
+      char serial[serial_len];
+
+      openni::Status rc = openni_device.getProperty(openni::DEVICE_PROPERTY_SERIAL_NUMBER, serial, &serial_len);
+      if (rc == openni::STATUS_OK)
+        ret = serial;
+      else
+      {
+        ROS_ERROR("Device \"%s\": failed to query serial number.\n", Uri.c_str());
+      }
+
+      // close the device again
+      openni_device.close();
+    }
+    else
+    {
+      ROS_DEBUG("Device \"%s\": failed to open for serial number query. It's probably used by another process.\n", Uri.c_str());
+    }
+
+    return ret;
   }
 
   virtual void onDeviceDisconnected(const openni::DeviceInfo* pInfo)

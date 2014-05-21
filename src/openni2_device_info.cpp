@@ -40,6 +40,7 @@ std::ostream& operator << (std::ostream& stream, const OpenNI2DeviceInfo& device
                                            ", Name: " << device_info.name_ <<
                                            ", Vendor ID: " << device_info.vendor_id_ <<
                                            ", Product ID: " << device_info.product_id_ <<
+                                           ", Serial number: " << device_info.serial_ <<
                                              ")" << std::endl;
   return stream;
 }

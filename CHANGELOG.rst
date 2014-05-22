@@ -2,6 +2,11 @@
 Changelog for package openni2_launch
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Force device_id to string type
+* Contributors: Dariush Forouher, Michael Ferguson
+
 0.2.0 (2014-05-20)
 ------------------
 * Remove machine arg, as it is not necessary.

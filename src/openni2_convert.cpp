@@ -39,7 +39,7 @@
 namespace openni2_wrapper
 {
 
-const OpenNI2DeviceInfo openni2_convert(const openni::DeviceInfo* pInfo)
+const OpenNI2DeviceInfo openni2_convert(const openni::DeviceInfo* pInfo, const std::string serial)
 {
   if (!pInfo)
     THROW_OPENNI_EXCEPTION("openni2_convert called with zero pointer\n");
@@ -51,6 +51,7 @@ const OpenNI2DeviceInfo openni2_convert(const openni::DeviceInfo* pInfo)
   output.vendor_     = pInfo->getVendor();
   output.product_id_ = pInfo->getUsbProductId();
   output.vendor_id_  = pInfo->getUsbVendorId();
+  output.serial_     = serial;
 
   return output;
 }

@@ -671,9 +671,20 @@ std::string OpenNI2Driver::resolveDeviceURI(const std::string& device_id) throw(
 
     THROW_OPENNI_EXCEPTION("Device not found %s", device_id_.c_str());
   }
-  // everything else is treated as device_URI directly
   else
   {
+    // check if the device id given matches a serial number of a connected device
+    boost::shared_ptr<std::vector<OpenNI2DeviceInfo> > dev_infos =
+      device_manager_->getConnectedDeviceInfos();
+
+    for(std::vector<OpenNI2DeviceInfo>::iterator it = dev_infos->begin();
+        it != dev_infos->end(); ++it)
+    {
+      if (device_id.size()>0 && device_id == it->serial_)
+        return it->uri_;
+    }
+
+    // everything else is treated as device_URI directly
     return device_id_;
   }
 }

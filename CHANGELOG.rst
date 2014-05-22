@@ -2,6 +2,12 @@
 Changelog for package openni2_camera
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* device_id: find camera by serial number
+* Make freenect_stack link a real link for wiki.
+* Contributors: Dariush Forouher, Michael Ferguson
+
 0.1.2 (2014-02-03)
 ------------------
 * Fix CMake error.

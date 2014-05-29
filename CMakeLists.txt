@@ -1,7 +1,15 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(openni2_camera)
 
-find_package(catkin REQUIRED camera_info_manager dynamic_reconfigure image_transport  nodelet sensor_msgs roscpp)
+find_package(catkin REQUIRED COMPONENTS camera_info_manager
+                                        dynamic_reconfigure
+                                        image_transport
+                                        nodelet
+                                        sensor_msgs
+                                        roscpp
+                                        pal_vision_msgs
+                                        tf
+                                        cv_bridge)
 
 find_package(Boost REQUIRED COMPONENTS system thread)
 
@@ -18,7 +26,7 @@ generate_dynamic_reconfigure_options(cfg/OpenNI2.cfg)
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES openni2_wrapper
-  CATKIN_DEPENDS camera_info_manager dynamic_reconfigure image_transport nodelet sensor_msgs roscpp
+  CATKIN_DEPENDS camera_info_manager dynamic_reconfigure image_transport nodelet sensor_msgs roscpp pal_vision_msgs tf cv_bridge
 )
 
 include_directories(include 
@@ -34,6 +42,7 @@ add_library(openni2_wrapper
    src/openni2_timer_filter.cpp 
    src/openni2_frame_listener.cpp
    src/nite2_hand_tracker_frame_listener.cpp
+   src/nite2_user_tracker_frame_listener.cpp
    src/openni2_device_manager.cpp
    src/openni2_exception.cpp
    src/openni2_video_mode.cpp

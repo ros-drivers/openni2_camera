@@ -29,23 +29,23 @@
  *      Author: Julius Kammerl (jkammerl@willowgarage.com)
  */
 
-// PAL headers
-#include <pal_vision_msgs/Gesture.h>
-
 #include "openni2_camera/openni2_driver.h"
 #include "openni2_camera/openni2_exception.h"
 
-// NiTE 2 headers
-#include "NiTE-2/NiTE.h"
+// PAL headers
+#include <pal_vision_msgs/Gesture.h>
 
+// ROS headers
+#include <std_msgs/Int16.h>
 #include <sensor_msgs/image_encodings.h>
 #include <sensor_msgs/distortion_models.h>
 
+// Boost headers
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/thread/thread.hpp>
 
 namespace openni2_wrapper
-{
+{ 
 
 OpenNI2Driver::OpenNI2Driver(ros::NodeHandle& n, ros::NodeHandle& pnh) :
     nh_(n),
@@ -58,7 +58,12 @@ OpenNI2Driver::OpenNI2Driver(ros::NodeHandle& n, ros::NodeHandle& pnh) :
     ir_subscribers_(false),
     color_subscribers_(false),
     depth_subscribers_(false),
-    depth_raw_subscribers_(false)
+    depth_raw_subscribers_(false),
+    gestures_subscribers_(false),
+    num_users_subscribers_(false),
+    user_map_subscribers_(false),
+    user_tracker_image_transport_(nh_),
+    next_available_color_id_(0)
 {
 
   genVideoModeTableMap();
@@ -78,8 +83,9 @@ OpenNI2Driver::OpenNI2Driver(ros::NodeHandle& n, ros::NodeHandle& pnh) :
   }
   ROS_DEBUG("Dynamic reconfigure configuration received.");
 
-  advertiseROSTopics();
+  initializeUserColors();
 
+  advertiseROSTopics(); 
 }
 
 void OpenNI2Driver::advertiseROSTopics()
@@ -129,6 +135,14 @@ void OpenNI2Driver::advertiseROSTopics()
   {
     ros::SubscriberStatusCallback rssc = boost::bind(&OpenNI2Driver::handTrackerConnectCb, this);
     pub_gestures_ = nh_.advertise<pal_vision_msgs::Gesture>("gestures", 1, rssc, rssc);
+  }
+
+  if ( device_->hasUserTracker() )
+  {
+    ros::SubscriberStatusCallback rssc = boost::bind(&OpenNI2Driver::userTrackerConnectCb, this);
+    pub_num_users_ = nh_.advertise<std_msgs::Int16>("num_users", 1, rssc, rssc);
+    image_transport::SubscriberStatusCallback itssc = boost::bind(&OpenNI2Driver::userTrackerConnectCb, this);
+    pub_user_map_ = user_tracker_image_transport_.advertise("user_map", 1, itssc, itssc);
   }
 
   ////////// CAMERA INFO MANAGER
@@ -418,7 +432,7 @@ void OpenNI2Driver::handTrackerConnectCb()
 
   bool need_hand_tracker = gestures_subscribers_;
 
-  if (gestures_subscribers_ && !device_->isHandTrackerStarted())
+  if (need_hand_tracker && !device_->isHandTrackerStarted())
   {
     device_->setHandTrackerFrameCallback(boost::bind(&OpenNI2Driver::newHandTrackerFrameCallback, this, _1));
 
@@ -432,6 +446,30 @@ void OpenNI2Driver::handTrackerConnectCb()
   }
 }
 
+void OpenNI2Driver::userTrackerConnectCb()
+{
+  boost::lock_guard<boost::mutex> lock(connect_mutex_);
+
+  num_users_subscribers_ = pub_num_users_.getNumSubscribers() > 0;
+  user_map_subscribers_  = pub_user_map_.getNumSubscribers() > 0;
+
+  bool need_user_tracker = num_users_subscribers_ || user_map_subscribers_;
+
+  if (need_user_tracker && !device_->isUserTrackerStarted())
+  {
+    device_->setUserTrackerFrameCallback(boost::bind(&OpenNI2Driver::newUserTrackerFrameCallback, this, _1));
+
+    ROS_INFO("Starting user tracker.");
+    device_->startUserTracker();
+  }
+  else if (!need_user_tracker && device_->isUserTrackerStarted())
+  {
+    ROS_INFO("Stopping user tracker.");
+    device_->stopUserTracker();
+    user_id_color_.clear();
+    next_available_color_id_ = 0;
+  }
+}
 
 void OpenNI2Driver::newIRFrameCallback(sensor_msgs::ImagePtr image)
 {
@@ -541,6 +579,44 @@ void OpenNI2Driver::newHandTrackerFrameCallback(nite::HandTrackerFrameRef handTr
       pub_gestures_.publish(msg);
     }
   }
+}
+
+void OpenNI2Driver::newUserTrackerFrameCallback(nite::UserTrackerFrameRef userTrackerFrame)
+{
+  std_msgs::Int16 msg;
+  msg.data = userTrackerFrame.getUsers().getSize();
+  pub_num_users_.publish(msg);
+
+  nite::UserMap userMap = userTrackerFrame.getUserMap();
+  cv::Mat cvUserMap(userMap.getHeight(), userMap.getWidth(),
+                    CV_16UC1, reinterpret_cast<void*>(const_cast<nite::UserId*>(userMap.getPixels())),
+                    userMap.getStride());
+
+  //std::cout << "userMap w: " << userMap.getWidth() << " h: " << userMap.getHeight() << " stride: " << userMap.getStride() << std::endl;
+
+  cv::Mat userImage = cv::Mat::zeros(userMap.getHeight(), userMap.getWidth(), CV_8UC3);
+
+  for (int i=0; i<userTrackerFrame.getUsers().getSize(); ++i)
+  {
+     nite::UserId nId = userTrackerFrame.getUsers()[i].getId();
+
+    cv::Mat userMask = (cvUserMap == nId);
+    if ( user_id_color_.find(nId) == user_id_color_.end() )
+    {
+      user_id_color_[nId] = user_colors_available_[next_available_color_id_];
+      ++next_available_color_id_;
+      if ( next_available_color_id_ == user_colors_available_.size() )
+        next_available_color_id_ = 0;
+    }
+    userImage.setTo(user_id_color_[nId], userMask);
+  }
+
+  cv_image_.encoding = sensor_msgs::image_encodings::BGR8;
+  cv_image_.image = userImage;
+  sensor_msgs::Image img_msg;
+  img_msg.header.stamp = ros::Time::now();
+  cv_image_.toImageMsg(img_msg);
+  pub_user_map_.publish(img_msg);
 }
 
 // Methods to get calibration parameters for the various cameras
@@ -706,7 +782,7 @@ std::string OpenNI2Driver::resolveDeviceURI(const std::string& device_id) throw(
   {
     // get index of @ character
     size_t index = device_id_.find('@');
-    if (index <= 0)
+    if (index == 0 || index == std::string::npos )
     {
       THROW_OPENNI_EXCEPTION(
         "%s is not a valid device URI, you must give the bus number before the @.",
@@ -941,6 +1017,21 @@ sensor_msgs::ImageConstPtr OpenNI2Driver::rawToFloatingPointConversion(sensor_ms
   }
 
   return new_image;
+}
+
+void OpenNI2Driver::initializeUserColors()
+{
+  user_colors_available_.clear();
+  user_colors_available_.push_back( cv::Scalar(255,0,0) );
+  user_colors_available_.push_back( cv::Scalar(0,255,0) );
+  user_colors_available_.push_back( cv::Scalar(0,0,255) );
+  user_colors_available_.push_back( cv::Scalar(255,255,0) );
+  user_colors_available_.push_back( cv::Scalar(255,0,255) );
+  user_colors_available_.push_back( cv::Scalar(0,255,255) );
+  user_colors_available_.push_back( cv::Scalar(255,255,255) );
+  user_colors_available_.push_back( cv::Scalar(128,128,128) );
+
+  next_available_color_id_ = 0;
 }
 
 }

@@ -5,7 +5,11 @@ ROS wrapper for openni 2.2 and NiTE 2.2
 
 Note: openni2_camera supports xtion devices, but not kinects. For using a kinect with ROS, try the freenect stack: http://www.ros.org/wiki/freenect_stack
 
-This package derives from https://github.com/OpenNI/OpenNI2 and includes NiTE 2.2 to perform hand tracking and gesture recognition.
+This package derives from https://github.com/OpenNI/OpenNI2 and includes NiTE 2.2 to perform:
+
+* hand tracking and gesture recognition (waving and clicking)
+* person detection and tracking
+* skeleton tracking
 
 
 Requirements
@@ -96,6 +100,16 @@ rostopic echo /camera/gestures
 Wave in front of the camera or do the 'click' movement, i.e. point forward and bring back the arm
 
 
+How to visualize the user map
+-----------------------------
+
+The detected and tracked persons can be visualized in a segmented depth image as follows
+
+```
+rosrun image_view image_view image:=/camera/user_map
+```
+
+<img align="right" src="https://raw.github.com/pal-robotics/openni2_camera/add_user_tracker/etc/user_map.jpg"/>
 
 
 

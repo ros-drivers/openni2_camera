@@ -7,8 +7,7 @@ find_package(catkin REQUIRED COMPONENTS camera_info_manager
                                         nodelet
                                         sensor_msgs
                                         roscpp
-                                        pal_vision_msgs
-                                        tf
+                                        pal_vision_msgs                                        
                                         cv_bridge)
 
 find_package(Boost REQUIRED COMPONENTS system thread)
@@ -26,7 +25,7 @@ generate_dynamic_reconfigure_options(cfg/OpenNI2.cfg)
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES openni2_wrapper
-  CATKIN_DEPENDS camera_info_manager dynamic_reconfigure image_transport nodelet sensor_msgs roscpp pal_vision_msgs tf cv_bridge
+  CATKIN_DEPENDS camera_info_manager dynamic_reconfigure image_transport nodelet sensor_msgs roscpp pal_vision_msgs cv_bridge
 )
 
 include_directories(include 

@@ -44,7 +44,6 @@
 // ROS headers
 #include <ros/ros.h>
 #include <image_transport/image_transport.h>
-#include <tf/transform_broadcaster.h>
 #include <cv_bridge/cv_bridge.h>
 #include <dynamic_reconfigure/server.h>
 #include <image_transport/image_transport.h>
@@ -82,7 +81,8 @@ private:
   void newColorFrameCallback(sensor_msgs::ImagePtr image);
   void newDepthFrameCallback(sensor_msgs::ImagePtr image);
   void newHandTrackerFrameCallback(nite::HandTrackerFrameRef handTrackerFrame);
-  void newUserTrackerFrameCallback(nite::UserTrackerFrameRef userTrackerFrame);
+  void newUserTrackerFrameCallback(nite::UserTrackerFrameRef userTrackerFrame,
+                                   nite::UserTracker& userTracker);
 
   // Methods to get calibration parameters for the various cameras
   sensor_msgs::CameraInfoPtr getDefaultCameraInfo(int width, int height, double f) const;
@@ -117,7 +117,18 @@ private:
   void setColorVideoMode(const OpenNI2VideoMode& color_video_mode);
   void setDepthVideoMode(const OpenNI2VideoMode& depth_video_mode);
 
+  //user tracking
   void initializeUserColors();
+  void drawSkeletonLink(nite::UserTracker& userTracker,
+                        const nite::SkeletonJoint& joint1,
+                        const nite::SkeletonJoint& joint2,
+                        cv::Mat& img);
+  void drawSkeleton(nite::UserTracker& userTracker,
+                    const nite::UserData& user,
+                    cv::Mat& img);
+  void publishUsers(nite::UserTrackerFrameRef userTrackerFrame);
+  void publishUserMap(nite::UserTrackerFrameRef userTrackerFrame,
+                      nite::UserTracker& userTracker);
 
   ros::NodeHandle& nh_;
   ros::NodeHandle& pnh_;
@@ -192,8 +203,7 @@ private:
   ros::Publisher pub_gestures_;
 
   //NiTE user tracker
-  ros::Publisher pub_num_users_;  
-  tf::TransformBroadcaster tf_broadcaster_; 
+  ros::Publisher pub_users_;
   image_transport::ImageTransport user_tracker_image_transport_;
   cv_bridge::CvImage cv_image_;
   image_transport::Publisher pub_user_map_;

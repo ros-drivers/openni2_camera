@@ -29,7 +29,7 @@ void NiTE2UserTrackerFrameListener::onNewFrame(nite::UserTracker& userTracker)
     {
       if ( userTrackerFrame_.isValid() )
       {
-        callback_(userTrackerFrame_);
+        callback_(userTrackerFrame_, userTracker);
       }
       else
         ROS_WARN("Skipping user tracker frame as it is not valid");

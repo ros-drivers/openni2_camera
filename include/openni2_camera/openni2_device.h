@@ -70,7 +70,8 @@ namespace nite2_wrapper
 
   //User tracker
   class NiTE2UserTrackerFrameListener;
-  typedef boost::function<void(nite::UserTrackerFrameRef userTrackerFrame)> UserTrackerFrameCallbackFunction;
+  typedef boost::function<void(nite::UserTrackerFrameRef userTrackerFrame,
+                               nite::UserTracker& userTracker)> UserTrackerFrameCallbackFunction;
 }
 
 namespace openni2_wrapper
@@ -158,7 +159,7 @@ public:
   bool getAutoExposure() const;
   bool getAutoWhiteBalance() const;
 
-  void setUseDeviceTimer(bool enable);
+  void setUseDeviceTimer(bool enable);  
 
 protected:
   void shutdown();

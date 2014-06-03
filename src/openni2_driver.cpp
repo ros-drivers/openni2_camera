@@ -583,9 +583,31 @@ void OpenNI2Driver::newHandTrackerFrameCallback(nite::HandTrackerFrameRef handTr
 }
 
 void OpenNI2Driver::publishUsers(nite::UserTrackerFrameRef userTrackerFrame)
-{
-  pal_detection_msgs::PersonDetections msg;
+{    
+  pal_detection_msgs::PersonDetections detectionsMsg;
 
+  detectionsMsg.header.stamp = ros::Time::now();
+
+  const nite::Array<nite::UserData>& users = userTrackerFrame.getUsers();
+  for (int i = 0; i < users.getSize(); ++i)
+  {
+    const nite::UserData& user = users[i];
+    if ( user.getSkeleton().getState() == nite::SKELETON_TRACKED &&
+         user.isVisible() && !user.isLost() )
+    {
+      pal_detection_msgs::PersonDetection detectionMsg;
+
+      detectionMsg.position3D.header.frame_id = depth_frame_id_;
+      detectionMsg.position3D.point.x = user.getCenterOfMass().x;
+      detectionMsg.position3D.point.y = user.getCenterOfMass().y;
+      detectionMsg.position3D.point.z = user.getCenterOfMass().z;
+
+      detectionsMsg.persons.push_back(detectionMsg);
+    }    
+  }
+
+  if ( !detectionsMsg.persons.empty() )
+    pub_users_.publish(detectionsMsg);
 }
 
 void OpenNI2Driver::drawSkeletonLink(nite::UserTracker& userTracker,
@@ -695,7 +717,8 @@ void OpenNI2Driver::publishUserMap(nite::UserTrackerFrameRef userTrackerFrame,
     const nite::UserData& user = users[i];
     nite::UserId nId = user.getId();
 
-    if ( user.getSkeleton().getState() == nite::SKELETON_TRACKED )
+    if ( user.getSkeleton().getState() == nite::SKELETON_TRACKED &&
+         user.isVisible() && !user.isLost() )
     {      
       cv::Mat userMask = (cvUserMap == nId);
       if ( user_id_color_.find(nId) == user_id_color_.end() )

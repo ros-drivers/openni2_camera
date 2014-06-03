@@ -66,8 +66,8 @@ cd openni2_launch
 git checkout hydro-devel
 ```
 
-How to
-======
+Guidelines
+==========
 
 How to launch the camera node
 -----------------------------
@@ -110,6 +110,89 @@ rosrun image_view image_view image:=/camera/user_map
 ```
 
 <img align="middle" src="https://raw.github.com/pal-robotics/openni2_camera/add_user_tracker/etc/user_map.jpg"/>
+
+How to get tracked persons position
+-----------------------------------
+
+The topic /camera/users of type pal_detection_msgs::PersonDetections contain the 3D position of the tracked persons wrt the depth camera frame
+
+```
+rostopic echo /camera/users
+
+---
+header: 
+  seq: 675
+  stamp: 
+    secs: 1401778685
+    nsecs: 563214248
+  frame_id: ''
+persons: 
+  - 
+    full_body: 
+      x: 0
+      y: 0
+      width: 0
+      height: 0
+    face: 
+      x: 0
+      y: 0
+      width: 0
+      height: 0
+      eyesLocated: False
+      leftEyeX: 0
+      leftEyeY: 0
+      rightEyeX: 0
+      rightEyeY: 0
+      position: 
+        x: 0.0
+        y: 0.0
+        z: 0.0
+      name: ''
+      confidence: 0.0
+    legs: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs: 0
+        frame_id: ''
+      position3D: []
+      laser_pose: 
+        header: 
+          seq: 0
+          stamp: 
+            secs: 0
+            nsecs: 0
+          frame_id: ''
+        child_frame_id: ''
+        transform: 
+          translation: 
+            x: 0.0
+            y: 0.0
+            z: 0.0
+          rotation: 
+            x: 0.0
+            y: 0.0
+            z: 0.0
+            w: 0.0
+    position3D: 
+      header: 
+        seq: 0
+        stamp: 
+          secs: 0
+          nsecs: 0
+        frame_id: camera_depth_optical_frame
+      point: 
+        x: 380.052642822
+        y: -136.789474487
+        z: 801.789489746
+---
+```
+
+As it can be seen, the useful information appears in the persons.position3D field
+
+
+
 
 
 

@@ -32,27 +32,38 @@
 #ifndef OPENNI2_DRIVER_H
 #define OPENNI2_DRIVER_H
 
+
+#include "openni2_camera/openni2_device_manager.h"
+#include "openni2_camera/openni2_device.h"
+#include "openni2_camera/openni2_video_mode.h"
+#include <openni2_camera/OpenNI2Config.h>
+
+// NiTE 2 headers
+#include "NiTE-2/NiTE.h"
+
+// ROS headers
+#include <ros/ros.h>
+#include <image_transport/image_transport.h>
+#include <cv_bridge/cv_bridge.h>
+#include <dynamic_reconfigure/server.h>
+#include <image_transport/image_transport.h>
+#include <camera_info_manager/camera_info_manager.h>
+#include <sensor_msgs/Image.h>
+
+// OpenCV headers
+#include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+
+// Boost headers
 #include <boost/shared_ptr.hpp>
 #include <boost/cstdint.hpp>
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
 
-#include <sensor_msgs/Image.h>
-
-#include <dynamic_reconfigure/server.h>
-#include <openni2_camera/OpenNI2Config.h>
-
-#include <image_transport/image_transport.h>
-#include <camera_info_manager/camera_info_manager.h>
-
+// Std C++ headers
 #include <string>
 #include <vector>
-
-#include "openni2_camera/openni2_device_manager.h"
-#include "openni2_camera/openni2_device.h"
-#include "openni2_camera/openni2_video_mode.h"
-
-#include <ros/ros.h>
+#include <map>
 
 namespace openni2_wrapper
 {
@@ -70,6 +81,8 @@ private:
   void newColorFrameCallback(sensor_msgs::ImagePtr image);
   void newDepthFrameCallback(sensor_msgs::ImagePtr image);
   void newHandTrackerFrameCallback(nite::HandTrackerFrameRef handTrackerFrame);
+  void newUserTrackerFrameCallback(nite::UserTrackerFrameRef userTrackerFrame,
+                                   nite::UserTracker& userTracker);
 
   // Methods to get calibration parameters for the various cameras
   sensor_msgs::CameraInfoPtr getDefaultCameraInfo(int width, int height, double f) const;
@@ -89,6 +102,7 @@ private:
   void depthConnectCb();
   void irConnectCb();
   void handTrackerConnectCb();
+  void userTrackerConnectCb();
 
   void configCb(Config &config, uint32_t level);
 
@@ -102,6 +116,19 @@ private:
   void setIRVideoMode(const OpenNI2VideoMode& ir_video_mode);
   void setColorVideoMode(const OpenNI2VideoMode& color_video_mode);
   void setDepthVideoMode(const OpenNI2VideoMode& depth_video_mode);
+
+  //user tracking
+  void initializeUserColors();
+  void drawSkeletonLink(nite::UserTracker& userTracker,
+                        const nite::SkeletonJoint& joint1,
+                        const nite::SkeletonJoint& joint2,
+                        cv::Mat& img);
+  void drawSkeleton(nite::UserTracker& userTracker,
+                    const nite::UserData& user,
+                    cv::Mat& img);
+  void publishUsers(nite::UserTrackerFrameRef userTrackerFrame);
+  void publishUserMap(nite::UserTrackerFrameRef userTrackerFrame,
+                      nite::UserTracker& userTracker);
 
   ros::NodeHandle& nh_;
   ros::NodeHandle& pnh_;
@@ -165,6 +192,8 @@ private:
   bool depth_subscribers_;
   bool depth_raw_subscribers_;
   bool gestures_subscribers_;
+  bool num_users_subscribers_;
+  bool user_map_subscribers_;
 
   bool use_device_time_;
 
@@ -172,6 +201,16 @@ private:
 
   //NiTE hand tracking and gesture recognition  
   ros::Publisher pub_gestures_;
+
+  //NiTE user tracker
+  ros::Publisher pub_users_;
+  image_transport::ImageTransport user_tracker_image_transport_;
+  cv_bridge::CvImage cv_image_;
+  image_transport::Publisher pub_user_map_;
+  std::vector<cv::Scalar> user_colors_available_;
+  std::map<nite::UserId, cv::Scalar> user_id_color_; //what color is used to paint each tracker user
+  int next_available_color_id_;
+
 };
 
 }

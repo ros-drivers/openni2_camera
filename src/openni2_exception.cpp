@@ -54,10 +54,13 @@ OpenNI2Exception::OpenNI2Exception (const std::string& function_name, const std:
 OpenNI2Exception::~OpenNI2Exception () throw ()
 {
 }
-
+// cppcheck-suppress operatorEqVarError
 OpenNI2Exception& OpenNI2Exception::operator = (const OpenNI2Exception& exception) throw ()
 {
   message_ = exception.message_;
+  line_number_ = exception.line_number_;
+  function_name_ = exception.function_name_;
+  file_name_ = exception.file_name_;
   return *this;
 }
 

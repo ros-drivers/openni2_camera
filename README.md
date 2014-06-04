@@ -109,7 +109,7 @@ The detected and tracked persons can be visualized in a segmented depth image as
 rosrun image_view image_view image:=/camera/user_map
 ```
 
-<img align="middle" src="https://raw.github.com/pal-robotics/openni2_camera/add_user_tracker/etc/user_map.jpg"/>
+<img align="middle" src="https://raw.githubusercontent.com/pal-robotics/openni2_camera/hydro-devel/etc/user_map.jpg"/>
 
 How to get tracked persons position
 -----------------------------------

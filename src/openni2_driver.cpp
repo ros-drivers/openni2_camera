@@ -601,6 +601,9 @@ void OpenNI2Driver::publishUsers(nite::UserTrackerFrameRef userTrackerFrame)
       detectionMsg.position3D.point.x = user.getCenterOfMass().x;
       detectionMsg.position3D.point.y = user.getCenterOfMass().y;
       detectionMsg.position3D.point.z = user.getCenterOfMass().z;
+      std::stringstream ss;
+      ss << user.getId();
+      detectionMsg.face.name = ss.str();
 
       detectionsMsg.persons.push_back(detectionMsg);
     }    

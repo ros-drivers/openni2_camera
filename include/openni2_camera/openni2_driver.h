@@ -49,6 +49,7 @@
 #include <image_transport/image_transport.h>
 #include <camera_info_manager/camera_info_manager.h>
 #include <sensor_msgs/Image.h>
+#include <tf/transform_listener.h>
 
 // OpenCV headers
 #include <opencv2/core/core.hpp>
@@ -129,6 +130,7 @@ private:
   void publishUsers(nite::UserTrackerFrameRef userTrackerFrame);
   void publishUserMap(nite::UserTrackerFrameRef userTrackerFrame,
                       nite::UserTracker& userTracker);
+  bool getCameraPose(geometry_msgs::TransformStamped& cameraPose);
 
   ros::NodeHandle& nh_;
   ros::NodeHandle& pnh_;
@@ -210,7 +212,8 @@ private:
   std::vector<cv::Scalar> user_colors_available_;
   std::map<nite::UserId, cv::Scalar> user_id_color_; //what color is used to paint each tracker user
   int next_available_color_id_;
-
+  tf::TransformListener tf_listener_;
+  bool publish_camera_pose_;
 };
 
 }

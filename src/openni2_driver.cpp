@@ -40,6 +40,7 @@
 #include <std_msgs/Int16.h>
 #include <sensor_msgs/image_encodings.h>
 #include <sensor_msgs/distortion_models.h>
+#include <tf/transform_datatypes.h>
 
 // Boost headers
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -144,6 +145,12 @@ void OpenNI2Driver::advertiseROSTopics()
     pub_users_ = nh_.advertise<pal_detection_msgs::PersonDetections>("users", 1, rssc, rssc);
     image_transport::SubscriberStatusCallback itssc = boost::bind(&OpenNI2Driver::userTrackerConnectCb, this);
     pub_user_map_ = user_tracker_image_transport_.advertise("user_map", 1, itssc, itssc);
+
+    geometry_msgs::TransformStamped cameraPose;
+    //request camera pose to see if it is available in TF
+    publish_camera_pose_ = getCameraPose(cameraPose);
+    if ( !publish_camera_pose_ )
+      ROS_INFO("The camera pose won't be published as it is not in TF");
   }
 
   ////////// CAMERA INFO MANAGER
@@ -582,9 +589,48 @@ void OpenNI2Driver::newHandTrackerFrameCallback(nite::HandTrackerFrameRef handTr
   }
 }
 
+bool OpenNI2Driver::getCameraPose(geometry_msgs::TransformStamped& cameraPose)
+{  
+  //Get the camera frame pose wrt /base_link
+  std::string referenceFrame = "/base_link";
+  double timeOutMs = 1000;
+  std::string errMsg;
+  if ( !tf_listener_.waitForTransform(referenceFrame, color_frame_id_,
+                                  ros::Time(0),                    //get the most up to date transformation
+                                  ros::Duration(timeOutMs/1000.0), //time out
+                                  ros::Duration(0.01),             //checking rate
+                                  &errMsg) )                       //error message in case of failure
+  {
+    ROS_ERROR_STREAM("Unable to get TF transform from " << color_frame_id_ << " to " <<
+                     referenceFrame << ": " << errMsg);
+    return false;
+  }
+
+  try
+  {
+    tf::StampedTransform tfCameraPose;
+    tf_listener_.lookupTransform( referenceFrame, color_frame_id_,   //get transform from ... to ...
+                                  ros::Time(0),                      //get latest available
+                                  tfCameraPose);
+
+    tf::transformStampedTFToMsg(tfCameraPose, cameraPose);
+  }
+  catch ( const tf::TransformException& e)
+  {
+    ROS_ERROR_STREAM("Error in lookUpTransform from " << color_frame_id_ << " to " <<
+                     referenceFrame);
+    return false;
+  }
+
+  return true;
+}
+
 void OpenNI2Driver::publishUsers(nite::UserTrackerFrameRef userTrackerFrame)
-{    
+{
   pal_detection_msgs::PersonDetections detectionsMsg;
+
+  if ( publish_camera_pose_ )
+    getCameraPose(detectionsMsg.camera_pose);
 
   detectionsMsg.header.stamp = ros::Time::now();
 
@@ -598,9 +644,9 @@ void OpenNI2Driver::publishUsers(nite::UserTrackerFrameRef userTrackerFrame)
       pal_detection_msgs::PersonDetection detectionMsg;
 
       detectionMsg.position3D.header.frame_id = depth_frame_id_;
-      detectionMsg.position3D.point.x = user.getCenterOfMass().x;
-      detectionMsg.position3D.point.y = user.getCenterOfMass().y;
-      detectionMsg.position3D.point.z = user.getCenterOfMass().z;
+      detectionMsg.position3D.point.x = user.getCenterOfMass().x/1000.0; //from mm to m
+      detectionMsg.position3D.point.y = user.getCenterOfMass().y/1000.0;
+      detectionMsg.position3D.point.z = user.getCenterOfMass().z/1000.0;
       std::stringstream ss;
       ss << user.getId();
       detectionMsg.face.name = ss.str();

@@ -6,7 +6,11 @@ find_package(catkin REQUIRED camera_info_manager dynamic_reconfigure image_trans
 find_package(Boost REQUIRED COMPONENTS system thread)
 
 find_package(PkgConfig)
-pkg_check_modules(PC_OPENNI2 REQUIRED libopenni2)
+
+pkg_check_modules(PC_OPENNI2 libopenni2)
+if (NOT PC_OPENNI2_FOUND)
+  pkg_check_modules(PC_OPENNI2 REQUIRED openni2)
+endif()
 
 generate_dynamic_reconfigure_options(cfg/OpenNI2.cfg)
 

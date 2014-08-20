@@ -135,7 +135,7 @@ bool OpenNI2Device::isValid() const
 float OpenNI2Device::getIRFocalLength(int output_y_resolution) const
 {
   float focal_length = 0.0f;
-  boost::shared_ptr<openni::VideoStream> stream = getColorVideoStream();
+  boost::shared_ptr<openni::VideoStream> stream = getIRVideoStream();
 
   if (stream)
   {
@@ -161,7 +161,7 @@ float OpenNI2Device::getColorFocalLength(int output_y_resolution) const
 float OpenNI2Device::getDepthFocalLength(int output_y_resolution) const
 {
   float focal_length = 0.0f;
-  boost::shared_ptr<openni::VideoStream> stream = getColorVideoStream();
+  boost::shared_ptr<openni::VideoStream> stream = getDepthVideoStream();
 
   if (stream)
   {

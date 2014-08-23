@@ -2,8 +2,8 @@
 Changelog for package openni2_camera
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.2.1 (2014-08-22)
+------------------
 * Fixed a bug that prevents depth only sensors from properly calculating the point cloud due to incorrect focal length
 * Updated cmakelists for OSX
 * Contributors: Colin Lea, Michael Ferguson, Tarek Taha

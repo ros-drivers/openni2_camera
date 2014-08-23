@@ -2,6 +2,12 @@
 Changelog for package openni2_camera
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fixed a bug that prevents depth only sensors from properly calculating the point cloud due to incorrect focal length
+* Updated cmakelists for OSX
+* Contributors: Colin Lea, Michael Ferguson, Tarek Taha
+
 0.2.0 (2014-05-22)
 ------------------
 * device_id: find camera by serial number

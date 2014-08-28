@@ -200,6 +200,7 @@ protected:
 
   bool use_device_time_;      
 
+  friend class OpenNI2Driver;
 
 };
 

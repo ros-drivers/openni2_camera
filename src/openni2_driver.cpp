@@ -643,10 +643,34 @@ void OpenNI2Driver::publishUsers(nite::UserTrackerFrameRef userTrackerFrame)
     {
       pal_detection_msgs::PersonDetection detectionMsg;
 
+
+      std::cout << "Bounding box  min = (" << user.getBoundingBox().min.x << ", " << user.getBoundingBox().min.y << ", " << user.getBoundingBox().min.z << ")" <<
+                   " max = (" << user.getBoundingBox().max.x << ", " << user.getBoundingBox().max.y << ", " << user.getBoundingBox().max.z << ")" << std::endl;
+      int depthX = user.getBoundingBox().min.x + (user.getBoundingBox().max.x - user.getBoundingBox().min.x)/2;
+      int depthY = user.getBoundingBox().min.y + (user.getBoundingBox().max.y - user.getBoundingBox().min.y)/2;
+      float worldX;
+      float worldY;
+      float worldZ;
+
+      openni::DepthPixel *depth_pixel = (openni::DepthPixel *)userTrackerFrame.getDepthFrame().getData();
+      openni::DepthPixel pixel = depth_pixel[depthY * userTrackerFrame.getDepthFrame().getVideoMode().getResolutionX() + depthX];
+
+      openni::CoordinateConverter::convertDepthToWorld(*(device_->getDepthVideoStream()),
+                                                       depthX,
+                                                       depthY,
+                                                       pixel,
+                                                       &worldX,
+                                                       &worldY,
+                                                       &worldZ);
+
       detectionMsg.position3D.header.frame_id = depth_frame_id_;
       detectionMsg.position3D.point.x = user.getCenterOfMass().x/1000.0; //from mm to m
       detectionMsg.position3D.point.y = user.getCenterOfMass().y/1000.0;
       detectionMsg.position3D.point.z = user.getCenterOfMass().z/1000.0;
+
+      std::cout << "User position from depth image:        " << worldX/1000 << ", " << worldY/1000 << ", " << worldZ/1000 << " m " << std::endl;
+      std::cout << "user position provided by UserTracker: " << detectionMsg.position3D.point.x << ", " << detectionMsg.position3D.point.y << ", " << detectionMsg.position3D.point.z << " m" << std::endl;
+      std::cout << std::endl;
       std::stringstream ss;
       ss << user.getId();
       detectionMsg.face.name = ss.str();

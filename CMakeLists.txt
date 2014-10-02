@@ -61,7 +61,9 @@ add_executable(openni2_camera_node
 target_link_libraries(openni2_camera_node openni2_driver_lib ${catkin_LIBRARIES} ${Boost_LIBRARIES} )
 add_dependencies(openni2_camera_node ${PROJECT_NAME}_gencfg)
 
-install(TARGETS openni2_wrapper openni2_camera_nodelet openni2_camera_node openni2_driver_lib
+add_executable(usb_reset src/usb_reset.c)
+
+install(TARGETS openni2_wrapper openni2_camera_nodelet openni2_camera_node openni2_driver_lib usb_reset
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

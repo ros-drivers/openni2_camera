@@ -2,6 +2,11 @@
 Changelog for package openni2_camera
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add usb_reset
+* Contributors: Kei Okada, Michael Ferguson
+
 0.2.1 (2014-08-22)
 ------------------
 * Fixed a bug that prevents depth only sensors from properly calculating the point cloud due to incorrect focal length

@@ -2,6 +2,11 @@
 Changelog for package openni2_camera
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add usb_reset
+* Contributors: Kei Okada, Michael Ferguson
+
 0.1.3 (2014-05-22)
 ------------------
 * device_id: find camera by serial number

@@ -2,8 +2,8 @@
 Changelog for package openni2_camera
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.2.2 (2014-10-06)
+------------------
 * Add usb_reset
 * Contributors: Kei Okada, Michael Ferguson
 

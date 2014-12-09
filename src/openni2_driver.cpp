@@ -674,14 +674,18 @@ std::string OpenNI2Driver::resolveDeviceURI(const std::string& device_id) throw(
   else
   {
     // check if the device id given matches a serial number of a connected device
-    boost::shared_ptr<std::vector<OpenNI2DeviceInfo> > dev_infos =
-      device_manager_->getConnectedDeviceInfos();
-
-    for(std::vector<OpenNI2DeviceInfo>::iterator it = dev_infos->begin();
-        it != dev_infos->end(); ++it)
+    for(std::vector<std::string>::const_iterator it = available_device_URIs->begin();
+        it != available_device_URIs->end(); ++it)
     {
-      if (device_id.size()>0 && device_id == it->serial_)
-        return it->uri_;
+      try {
+        std::string serial = device_manager_->getSerial(*it);
+        if (serial.size() > 0 && device_id == serial)
+          return *it;
+      }
+      catch (const OpenNI2Exception& exception)
+      {
+        ROS_WARN("Could not query serial number of device \"%s\":", exception.what());
+      }
     }
 
     // everything else is treated as device_URI directly

@@ -71,7 +71,7 @@ OpenNI2Device::OpenNI2Device(const std::string& device_URI) throw (OpenNI2Except
   }
 
   if (rc != openni::STATUS_OK)
-    THROW_OPENNI_EXCEPTION("Initialize failed\n%s\n", openni::OpenNI::getExtendedError());
+    THROW_OPENNI_EXCEPTION("Device open failed\n%s\n", openni::OpenNI::getExtendedError());
 
   device_info_ = boost::make_shared<openni::DeviceInfo>();
   *device_info_ = openni_device_->getDeviceInfo();

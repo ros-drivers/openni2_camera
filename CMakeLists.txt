@@ -39,7 +39,7 @@ add_library(openni2_wrapper
    src/openni2_exception.cpp
    src/openni2_video_mode.cpp
 )
-target_link_libraries(openni2_wrapper openni2_wrapper ${catkin_LIBRARIES} ${PC_OPENNI2_LIBRARIES} ${Boost_LIBRARIES} )
+target_link_libraries(openni2_wrapper ${catkin_LIBRARIES} ${PC_OPENNI2_LIBRARIES} ${Boost_LIBRARIES} )
 
 add_executable(test_wrapper test/test_wrapper.cpp )
 target_link_libraries(test_wrapper openni2_wrapper ${Boost_LIBRARIES})
@@ -62,9 +62,14 @@ add_executable(openni2_camera_node
 target_link_libraries(openni2_camera_node openni2_driver_lib ${catkin_LIBRARIES} ${Boost_LIBRARIES} )
 add_dependencies(openni2_camera_node ${PROJECT_NAME}_gencfg)
 
+add_executable(list_devices
+   src/list_devices.cpp
+)
+target_link_libraries(list_devices openni2_wrapper)
+
 add_executable(usb_reset src/usb_reset.c)
 
-install(TARGETS openni2_wrapper openni2_camera_nodelet openni2_camera_node openni2_driver_lib usb_reset
+install(TARGETS openni2_wrapper openni2_camera_nodelet openni2_camera_node list_devices openni2_driver_lib usb_reset
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

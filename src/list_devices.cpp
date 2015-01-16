@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Willow Garage, Inc.
+ * Copyright (c) 2014, Savioke, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,30 +26,40 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- *      Author: Julius Kammerl (jkammerl@willowgarage.com)
+ *      Author: Stephan Wirth (wirth@savioke.com)
  */
 
-#ifndef OPENNI2_DEVICE_INFO_H_
-#define OPENNI2_DEVICE_INFO_H_
+/**
+ * Small executable that creates a device manager to print the information of all devices including their
+ * serial number.
+ */
 
-#include <ostream>
+#include <iostream>
+#include "openni2_camera/openni2_device_manager.h"
+#include "openni2_camera/openni2_exception.h"
 
-#include <boost/cstdint.hpp>
+using openni2_wrapper::OpenNI2DeviceManager;
+using openni2_wrapper::OpenNI2DeviceInfo;
+using openni2_wrapper::OpenNI2Exception;
 
-namespace openni2_wrapper
+int main(int arc, char** argv)
 {
-
-struct OpenNI2DeviceInfo
-{
-  std::string uri_;
-  std::string vendor_;
-  std::string name_;
-  uint16_t vendor_id_;
-  uint16_t product_id_;
-};
-
-std::ostream& operator << (std::ostream& stream, const OpenNI2DeviceInfo& device_info);
-
+  openni2_wrapper::OpenNI2DeviceManager manager;
+  boost::shared_ptr<std::vector<openni2_wrapper::OpenNI2DeviceInfo> > device_infos = manager.getConnectedDeviceInfos();
+  std::cout << "Found " << device_infos->size() << " devices:" << std::endl << std::endl;
+  for (size_t i = 0; i < device_infos->size(); ++i)
+  {
+    std::cout << "Device #" << i << ":" << std::endl;
+    std::cout << device_infos->at(i) << std::endl;
+    try {
+      std::string serial = manager.getSerial(device_infos->at(i).uri_);
+      std::cout << "Serial number: " << serial << std::endl;
+    }
+    catch (const OpenNI2Exception& exception)
+    {
+      std::cerr << "Could not retrieve serial number: " << exception.what() << std::endl;
+    }
+  }
+  return 0;
 }
 
-#endif /* DRIVER_H_ */

@@ -605,14 +605,15 @@ void OpenNI2Driver::readConfigFromParameterServer()
 
 std::string OpenNI2Driver::resolveDeviceURI(const std::string& device_id) throw(OpenNI2Exception)
 {
-  std::string device_URI;
-  boost::shared_ptr<std::vector<std::string> > available_device_URIs = 
+  // retrieve available device URIs, they look like this: "1d27/0601@1/5"
+  // which is <vendor ID>/<product ID>@<bus number>/<device number>
+  boost::shared_ptr<std::vector<std::string> > available_device_URIs =
     device_manager_->getConnectedDeviceURIs();
 
   // look for '#<number>' format
-  if (device_id_.size() > 1 && device_id_[0] == '#')
+  if (device_id.size() > 1 && device_id[0] == '#')
   {
-    std::istringstream device_number_str(device_id_.substr(1));
+    std::istringstream device_number_str(device_id.substr(1));
     int device_number;
     device_number_str >> device_number;
     int device_index = device_number - 1; // #1 refers to first device
@@ -631,30 +632,30 @@ std::string OpenNI2Driver::resolveDeviceURI(const std::string& device_id) throw(
   //   <bus>    is usb bus id, typically start at 1
   //   <number> is the device number, for consistency with openni_camera, these start at 1
   //               although 0 specifies "any device on this bus"
-  else if (device_id_.size() > 1 && device_id_.find('@') != std::string::npos)
+  else if (device_id.size() > 1 && device_id.find('@') != std::string::npos && device_id.find('/') == std::string::npos)
   {
     // get index of @ character
-    size_t index = device_id_.find('@');
+    size_t index = device_id.find('@');
     if (index <= 0)
     {
       THROW_OPENNI_EXCEPTION(
         "%s is not a valid device URI, you must give the bus number before the @.",
-        device_id_.c_str());
+        device_id.c_str());
     }
-    if (index >= device_id_.size() - 1)
+    if (index >= device_id.size() - 1)
     {
       THROW_OPENNI_EXCEPTION(
         "%s is not a valid device URI, you must give a number after the @, specify 0 for first device",
-        device_id_.c_str());
+        device_id.c_str());
     }
 
     // pull out device number on bus
-    std::istringstream device_number_str(device_id_.substr(index+1));
+    std::istringstream device_number_str(device_id.substr(index+1));
     int device_number;
     device_number_str >> device_number;
 
     // reorder to @<bus>
-    std::string bus = device_id_.substr(0, index);
+    std::string bus = device_id.substr(0, index);
     bus.insert(0, "@");
 
     for (size_t i = 0; i < available_device_URIs->size(); ++i)
@@ -669,7 +670,7 @@ std::string OpenNI2Driver::resolveDeviceURI(const std::string& device_id) throw(
       }
     }
 
-    THROW_OPENNI_EXCEPTION("Device not found %s", device_id_.c_str());
+    THROW_OPENNI_EXCEPTION("Device not found %s", device_id.c_str());
   }
   else
   {
@@ -688,8 +689,27 @@ std::string OpenNI2Driver::resolveDeviceURI(const std::string& device_id) throw(
       }
     }
 
-    // everything else is treated as device_URI directly
-    return device_id_;
+    // everything else is treated as part of the device_URI
+    bool match_found = false;
+    std::string matched_uri;
+    for (size_t i = 0; i < available_device_URIs->size(); ++i)
+    {
+      std::string s = (*available_device_URIs)[i];
+      if (s.find(device_id) != std::string::npos)
+      {
+        if (!match_found)
+        {
+          matched_uri = s;
+          match_found = true;
+        }
+        else
+        {
+          // more than one match
+          THROW_OPENNI_EXCEPTION("Two devices match the given device id '%s': %s and %s.", device_id.c_str(), matched_uri.c_str(), s.c_str());
+        }
+      }
+    }
+    return matched_uri;
   }
 }
 

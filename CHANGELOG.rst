@@ -2,6 +2,12 @@
 Changelog for package openni2_camera
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* proper usage of device_id parameter in resolveDeviceURI, resolve unique parts of device URIs, too
+* print vendor id and product id as hex value (like in lsusb)
+* Contributors: Michael Ferguson, Stephan Wirth
+
 0.2.3 (2015-01-16)
 ------------------
 * Explicitly ask for serial number when trying to resolve device URI instead of doing it once on device connected, fixes `#24 <https://github.com/ros-drivers/openni2_camera/issues/24>`_

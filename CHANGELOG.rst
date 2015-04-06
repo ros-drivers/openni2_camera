@@ -2,8 +2,8 @@
 Changelog for package openni2_camera
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.2.4 (2015-04-06)
+------------------
 * proper usage of device_id parameter in resolveDeviceURI, resolve unique parts of device URIs, too
 * print vendor id and product id as hex value (like in lsusb)
 * Contributors: Michael Ferguson, Stephan Wirth

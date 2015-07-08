@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(openni2_camera)
 
-find_package(catkin REQUIRED camera_info_manager dynamic_reconfigure image_transport  nodelet sensor_msgs roscpp)
+find_package(catkin REQUIRED camera_info_manager dynamic_reconfigure image_transport  nodelet sensor_msgs roscpp message_generation)
 
 find_package(Boost REQUIRED COMPONENTS system thread)
 
@@ -13,11 +13,14 @@ if (NOT PC_OPENNI2_FOUND)
 endif()
 
 generate_dynamic_reconfigure_options(cfg/OpenNI2.cfg)
+add_service_files(FILES
+  GetSerial.srv)
+generate_messages()
 
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES openni2_wrapper
-  CATKIN_DEPENDS camera_info_manager dynamic_reconfigure image_transport nodelet sensor_msgs roscpp
+  CATKIN_DEPENDS camera_info_manager dynamic_reconfigure image_transport nodelet sensor_msgs roscpp message_runtime
   DEPENDS libopenni2
 )
 
@@ -60,7 +63,7 @@ add_executable(openni2_camera_node
    ros/openni2_camera_node.cpp
 )
 target_link_libraries(openni2_camera_node openni2_driver_lib ${catkin_LIBRARIES} ${Boost_LIBRARIES} )
-add_dependencies(openni2_camera_node ${PROJECT_NAME}_gencfg)
+add_dependencies(openni2_camera_node ${PROJECT_NAME}_gencfg ${PROJECT_NAME}_generate_messages_cpp)
 
 add_executable(list_devices
    src/list_devices.cpp

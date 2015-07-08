@@ -139,6 +139,13 @@ void OpenNI2Driver::advertiseROSTopics()
   color_info_manager_ = boost::make_shared<camera_info_manager::CameraInfoManager>(color_nh, color_name, color_info_url_);
   ir_info_manager_  = boost::make_shared<camera_info_manager::CameraInfoManager>(ir_nh,  ir_name,  ir_info_url_);
 
+  get_serial_server = nh_.advertiseService("get_serial", &OpenNI2Driver::getSerialCb,this);
+
+}
+
+bool OpenNI2Driver::getSerialCb(openni2_camera::GetSerialRequest& req, openni2_camera::GetSerialResponse& res) {
+  res.serial = device_manager_->getSerial(device_->getUri());
+  return true;
 }
 
 void OpenNI2Driver::configCb(Config &config, uint32_t level)

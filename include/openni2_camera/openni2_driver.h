@@ -51,6 +51,7 @@
 #include "openni2_camera/openni2_device_manager.h"
 #include "openni2_camera/openni2_device.h"
 #include "openni2_camera/openni2_video_mode.h"
+#include "openni2_camera/GetSerial.h"
 
 #include <ros/ros.h>
 
@@ -88,6 +89,8 @@ private:
   void depthConnectCb();
   void irConnectCb();
 
+  bool getSerialCb(openni2_camera::GetSerialRequest& req, openni2_camera::GetSerialResponse& res);
+
   void configCb(Config &config, uint32_t level);
 
   void applyConfigToOpenNIDevice();
@@ -108,6 +111,9 @@ private:
   boost::shared_ptr<OpenNI2Device> device_;
 
   std::string device_id_;
+
+  /** \brief get_serial server*/
+  ros::ServiceServer get_serial_server;
 
   /** \brief reconfigure server*/
   boost::shared_ptr<ReconfigureServer> reconfigure_server_;

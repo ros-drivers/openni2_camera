@@ -713,6 +713,7 @@ std::ostream& operator <<(std::ostream& stream, const OpenNI2Device& device)
     stream << "No Depth sensor available" << std::endl;
   }
 
+  return stream;
 }
 
 }

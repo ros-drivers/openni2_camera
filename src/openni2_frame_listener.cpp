@@ -51,7 +51,7 @@ OpenNI2FrameListener::OpenNI2FrameListener() :
   ros::Time::init();
 }
 
-bool OpenNI2FrameListener::setUseDeviceTimer(bool enable)
+void OpenNI2FrameListener::setUseDeviceTimer(bool enable)
 {
   user_device_timer_ = enable;
 

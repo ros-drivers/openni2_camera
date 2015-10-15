@@ -2,8 +2,8 @@
 Changelog for package openni2_camera
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.2.5 (2015-10-15)
+------------------
 * Merge pull request `#34 <https://github.com/ros-drivers/openni2_camera/issues/34>`_ from Intermodalics/feature/get_serial_service
   added get_serial service
 * Contributors: Michael Ferguson, Ruben Smits

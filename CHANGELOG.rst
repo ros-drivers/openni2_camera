@@ -2,6 +2,12 @@
 Changelog for package openni2_camera
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Merge pull request `#34 <https://github.com/ros-drivers/openni2_camera/issues/34>`_ from Intermodalics/feature/get_serial_service
+  added get_serial service
+* Contributors: Michael Ferguson, Ruben Smits
+
 0.2.4 (2015-04-06)
 ------------------
 * proper usage of device_id parameter in resolveDeviceURI, resolve unique parts of device URIs, too

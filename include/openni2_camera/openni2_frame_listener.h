@@ -60,7 +60,7 @@ public:
     callback_ = callback;
   }
 
-  bool setUseDeviceTimer(bool enable);
+  void setUseDeviceTimer(bool enable);
 
 private:
   openni::VideoFrameRef m_frame;

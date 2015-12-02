@@ -70,9 +70,12 @@ add_executable(list_devices
 )
 target_link_libraries(list_devices openni2_wrapper)
 
-add_executable(usb_reset src/usb_reset.c)
+if (UNIX AND NOT APPLE)
+  add_executable(usb_reset src/usb_reset.c)
+  set(ADDITIONAL_EXECUTABLES "usb_reset")
+endif()
 
-install(TARGETS openni2_wrapper openni2_camera_nodelet openni2_camera_node list_devices openni2_driver_lib usb_reset
+install(TARGETS openni2_wrapper openni2_camera_nodelet openni2_camera_node list_devices openni2_driver_lib ${ADDITIONAL_EXECUTABLES}
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

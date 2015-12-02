@@ -68,7 +68,7 @@ OpenNI2Driver::OpenNI2Driver(ros::NodeHandle& n, ros::NodeHandle& pnh) :
   while (!config_init_)
   {
     ROS_DEBUG("Waiting for dynamic reconfigure configuration.");
-    boost::this_thread::sleep(boost::posix_time::seconds(0.1));
+    boost::this_thread::sleep(boost::posix_time::milliseconds(100));
   }
   ROS_DEBUG("Dynamic reconfigure configuration received.");
 
@@ -718,6 +718,8 @@ std::string OpenNI2Driver::resolveDeviceURI(const std::string& device_id) throw(
     }
     return matched_uri;
   }
+
+  return "INVALID";
 }
 
 void OpenNI2Driver::initDevice()
@@ -748,7 +750,7 @@ void OpenNI2Driver::initDevice()
   while (ros::ok() && !device_->isValid())
   {
     ROS_DEBUG("Waiting for device initialization..");
-    boost::this_thread::sleep(boost::posix_time::seconds(0.1));
+    boost::this_thread::sleep(boost::posix_time::milliseconds(100));
   }
 
 }

@@ -679,6 +679,11 @@ std::string OpenNI2Driver::resolveDeviceURI(const std::string& device_id) throw(
 
     THROW_OPENNI_EXCEPTION("Device not found %s", device_id.c_str());
   }
+
+  // check if device_id is a oni file
+  else if( device_id.size() - device_id.rfind(".oni") == 4 ) {
+	return device_id;
+  }
   else
   {
     // check if the device id given matches a serial number of a connected device

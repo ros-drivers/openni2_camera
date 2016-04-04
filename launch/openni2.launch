@@ -18,6 +18,11 @@
   <arg name="rgb_camera_info_url"   default="" />
   <arg name="depth_camera_info_url" default="" />
 
+  <!-- Resolution and FPS setting for each channel -->
+  <arg name="ir_mode"    default="5" />
+  <arg name="color_mode" default="5" />
+  <arg name="depth_mode" default="5" />
+
   <!-- Hardware depth registration -->
   <arg name="depth_registration" default="false" />
 
@@ -80,6 +85,9 @@
       <arg name="ir"                              value="$(arg ir)" />
       <arg name="depth"                           value="$(arg depth)" />
       <arg name="respawn"                         value="$(arg respawn)" />
+      <arg name="ir_mode"                         value="$(arg ir_mode)" />
+      <arg name="color_mode"                      value="$(arg color_mode)" />
+      <arg name="depth_mode"                      value="$(arg depth_mode)" />
       <arg name="depth_registration"              value="$(arg depth_registration)" />
       <arg name="color_depth_synchronization"     value="$(arg color_depth_synchronization)" />
       <arg name="auto_exposure"                   value="$(arg auto_exposure)" />

@@ -11,6 +11,9 @@
   <arg name="rgb_camera_info_url" />
   <arg name="depth_camera_info_url" />
 
+  <arg name="ir_mode" default="5" />
+  <arg name="color_mode" default="5" />
+  <arg name="depth_mode" default="5" />
   <arg name="depth_registration" default="true" />
   <arg name="color_depth_synchronization" default="false" />
   <arg name="auto_exposure" default="true" />
@@ -33,6 +36,10 @@
     <param name="depth_camera_info_url" value="$(arg depth_camera_info_url)" />
     <param name="rgb_frame_id"   value="$(arg rgb_frame_id)" />
     <param name="depth_frame_id" value="$(arg depth_frame_id)" />
+
+    <param name="ir_mode" value="$(arg ir_mode)" />
+    <param name="color_mode" value="$(arg color_mode)" />
+    <param name="depth_mode" value="$(arg depth_mode)" />
 
     <param name="depth_registration" value="$(arg depth_registration)" />
     <param name="color_depth_synchronization" value="$(arg color_depth_synchronization)" />

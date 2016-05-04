@@ -2,8 +2,8 @@
 Changelog for package openni2_camera
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.2.6 (2016-05-05)
+------------------
 * [fix] Compile for OSX `#30 <https://github.com/ros-drivers/openni2_camera/issues/30>`_
 * [fix] Crash on OSX and warning fixes.
 * Contributors: Hans Gaiser, Isaac I.Y. Saito, Michael Ferguson

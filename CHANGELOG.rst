@@ -2,6 +2,12 @@
 Changelog for package openni2_camera
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* [fix] Compile for OSX `#30 <https://github.com/ros-drivers/openni2_camera/issues/30>`_
+* [fix] Crash on OSX and warning fixes.
+* Contributors: Hans Gaiser, Isaac I.Y. Saito, Michael Ferguson
+
 0.2.5 (2015-10-15)
 ------------------
 * Merge pull request `#34 <https://github.com/ros-drivers/openni2_camera/issues/34>`_ from Intermodalics/feature/get_serial_service

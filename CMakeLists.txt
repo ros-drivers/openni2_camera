@@ -16,10 +16,9 @@ find_package(Boost REQUIRED COMPONENTS system thread)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}")
 
 add_definitions(-D__linux__)
-add_definitions(-Di386)
 
-find_package(OpenNI2)
-find_package(NiTE2)
+find_package(OpenNI2 REQUIRED)
+find_package(NiTE2 REQUIRED)
 
 generate_dynamic_reconfigure_options(cfg/OpenNI2.cfg)
 
@@ -91,14 +90,4 @@ install(FILES openni2_nodelets.xml
 install(FILES etc/NiTE.ini
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/etc
 )
-
-# install provided Openni2 and NiTE2 binaries
-install(DIRECTORY "lib/OpenNI2"
-        DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION})
-
-install(FILES "lib/libOpenNI2.so" "lib/libNiTE2.so"
-        DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION})
-
-
-
 

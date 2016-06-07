@@ -27,6 +27,7 @@ catkin_package(
   LIBRARIES openni2_wrapper
   CATKIN_DEPENDS camera_info_manager dynamic_reconfigure image_transport nodelet sensor_msgs roscpp pal_vision_msgs cv_bridge tf
 )
+link_directories(/usr/lib/OpenNI2/Drivers)
 
 include_directories(include 
                     ${catkin_INCLUDE_DIRS} 

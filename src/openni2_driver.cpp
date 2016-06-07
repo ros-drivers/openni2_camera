@@ -42,6 +42,7 @@
 #include <sensor_msgs/image_encodings.h>
 #include <sensor_msgs/distortion_models.h>
 #include <tf/transform_datatypes.h>
+#include <tf/transform_broadcaster.h>
 
 // Boost headers
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -815,6 +816,69 @@ void OpenNI2Driver::publishUserMap(nite::UserTrackerFrameRef userTrackerFrame,
   pub_user_map_.publish(img_msg);
 }
 
+void publishTransform(const nite::UserData& user, nite::JointType const& joint_name, const std::string& frame_id,
+                      const std::string& child_frame_id) {
+    static tf::TransformBroadcaster br;
+    const nite::SkeletonJoint joint = user.getSkeleton().getJoint(joint_name);
+    const nite::Point3f joint_position = joint.getPosition();
+    const nite::Quaternion joint_orientation = joint.getOrientation();
+
+    double x = -joint_position.x / 1000.0;
+    double y = joint_position.y / 1000.0;
+    double z = joint_position.z / 1000.0;
+
+    tf::Transform transform;
+    transform.setOrigin(tf::Vector3(x, y, z));
+
+    transform.setRotation(tf::Quaternion(joint_orientation.x, joint_orientation.y,
+                                         joint_orientation.z, joint_orientation.w));
+    if (isnan(transform.getRotation().x()) || isnan(transform.getRotation().y()) ||
+        isnan(transform.getRotation().z()) || isnan(transform.getRotation().w()))
+    {
+      ROS_WARN_STREAM_ONCE_NAMED(std::string("publishTransform ") + child_frame_id, "Got nan on frame " << child_frame_id <<
+                          " orientation. Publishing it with identity frame. Will only publish this message once per joint");
+      transform.setRotation(tf::Quaternion::getIdentity());
+    }
+
+    tf::Transform change_frame;
+    change_frame.setOrigin(tf::Vector3(0, 0, 0));
+    tf::Quaternion frame_rotation;
+    frame_rotation.setEulerZYX(1.5708, 0, 1.5708);
+    change_frame.setRotation(frame_rotation);
+
+    transform = change_frame * transform;
+    br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), frame_id, child_frame_id));
+}
+
+void publishTransforms(nite::UserTrackerFrameRef userTracker, const std::string& frame_id) {
+  for (int i = 0; i < userTracker.getUsers().getSize(); ++i)
+  {
+    const nite::UserData& user = userTracker.getUsers()[i];
+    if (user.getSkeleton().getState() != nite::SKELETON_TRACKED)
+      continue;
+
+        publishTransform(user, nite::JOINT_HEAD,           frame_id, "head");
+        publishTransform(user, nite::JOINT_NECK,           frame_id, "neck");
+        publishTransform(user, nite::JOINT_TORSO,          frame_id, "torso");
+
+        publishTransform(user, nite::JOINT_LEFT_SHOULDER,  frame_id, "left_shoulder");
+        publishTransform(user, nite::JOINT_LEFT_ELBOW,     frame_id, "left_elbow");
+        publishTransform(user, nite::JOINT_LEFT_HAND,      frame_id, "left_hand");
+
+        publishTransform(user, nite::JOINT_RIGHT_SHOULDER, frame_id, "right_shoulder");
+        publishTransform(user, nite::JOINT_RIGHT_ELBOW,    frame_id, "right_elbow");
+        publishTransform(user, nite::JOINT_RIGHT_HAND,     frame_id, "right_hand");
+
+        publishTransform(user, nite::JOINT_LEFT_HIP,       frame_id, "left_hip");
+        publishTransform(user, nite::JOINT_LEFT_KNEE,      frame_id, "left_knee");
+        publishTransform(user, nite::JOINT_LEFT_FOOT,      frame_id, "left_foot");
+
+        publishTransform(user, nite::JOINT_RIGHT_HIP,      frame_id, "right_hip");
+        publishTransform(user, nite::JOINT_RIGHT_KNEE,     frame_id, "right_knee");
+        publishTransform(user, nite::JOINT_RIGHT_FOOT,     frame_id, "right_foot");
+    }
+}
+
 void OpenNI2Driver::newUserTrackerFrameCallback(nite::UserTrackerFrameRef userTrackerFrame,
                                                 nite::UserTracker& userTracker)
 {
@@ -843,6 +907,7 @@ void OpenNI2Driver::newUserTrackerFrameCallback(nite::UserTrackerFrameRef userTr
                    userTracker);
   }
 
+  publishTransforms(userTrackerFrame, "/camera_link");
 }
 
 // Methods to get calibration parameters for the various cameras

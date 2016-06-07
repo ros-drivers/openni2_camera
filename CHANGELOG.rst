@@ -2,8 +2,8 @@
 Changelog for package openni2_camera
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.2.7 (2016-06-07)
+------------------
 * Merge pull request `#44 <https://github.com/ros-drivers/openni2_camera/issues/44>`_ from jacquelinekay/fix_kinetic_build
   fix compile on kinetic
 * Contributors: Jackie Kay, Michael Ferguson

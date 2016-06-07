@@ -162,6 +162,11 @@ void OpenNI2Driver::advertiseROSTopics()
     publish_camera_pose_ = getCameraPose(cameraPose);
     if ( !publish_camera_pose_ )
       ROS_INFO("The camera pose won't be published as it is not in TF");
+
+    device_->setUserTrackerFrameCallback(boost::bind(&OpenNI2Driver::newUserTrackerFrameCallback, this, _1, _2));
+
+    ROS_INFO("Starting user tracker.");
+    device_->startUserTracker();
   }
 
   ////////// CAMERA INFO MANAGER
@@ -471,23 +476,6 @@ void OpenNI2Driver::userTrackerConnectCb()
 
   num_users_subscribers_ = pub_users_.getNumSubscribers() > 0;
   user_map_subscribers_  = pub_user_map_.getNumSubscribers() > 0;
-
-  bool need_user_tracker = num_users_subscribers_ || user_map_subscribers_;
-
-  if (need_user_tracker && !device_->isUserTrackerStarted())
-  {
-    device_->setUserTrackerFrameCallback(boost::bind(&OpenNI2Driver::newUserTrackerFrameCallback, this, _1, _2));
-
-    ROS_INFO("Starting user tracker.");
-    device_->startUserTracker();
-  }
-  else if (!need_user_tracker && device_->isUserTrackerStarted())
-  {
-    ROS_INFO("Stopping user tracker.");
-    device_->stopUserTracker();
-    user_id_color_.clear();
-    next_available_color_id_ = 0;
-  }
 }
 
 void OpenNI2Driver::newIRFrameCallback(sensor_msgs::ImagePtr image)
@@ -842,12 +830,19 @@ void OpenNI2Driver::newUserTrackerFrameCallback(nite::UserTrackerFrameRef userTr
     }
   }
 
-  //publish num of users
-  publishUsers(userTrackerFrame);
+  if (num_users_subscribers_)
+  {
+    //publish num of users
+    publishUsers(userTrackerFrame);
+  }
 
-  //publisher user's segmentation map
-  publishUserMap(userTrackerFrame,
-                 userTracker);
+  if (user_map_subscribers_)
+  {
+    //publisher user's segmentation map
+    publishUserMap(userTrackerFrame,
+                   userTracker);
+  }
+
 }
 
 // Methods to get calibration parameters for the various cameras

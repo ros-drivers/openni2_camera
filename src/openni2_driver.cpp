@@ -37,6 +37,7 @@
 #include <pal_detection_msgs/PersonDetections.h>
 
 // ROS headers
+#include <ros/package.h>
 #include <std_msgs/Int16.h>
 #include <sensor_msgs/image_encodings.h>
 #include <sensor_msgs/distortion_models.h>
@@ -45,6 +46,7 @@
 // Boost headers
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/thread/thread.hpp>
+#include <boost/filesystem.hpp>
 
 namespace openni2_wrapper
 { 
@@ -67,6 +69,15 @@ OpenNI2Driver::OpenNI2Driver(ros::NodeHandle& n, ros::NodeHandle& pnh) :
     user_tracker_image_transport_(nh_),
     next_available_color_id_(0)
 {
+
+  std::string cwd = boost::filesystem::current_path().string();
+  std::string ini_file_path = ros::package::getPath("openni2_camera") + "/etc/NiTE.ini";
+  std::string target_ini_file = cwd + "/NiTE.ini";
+  if (!boost::filesystem::exists(target_ini_file))
+  {
+    ROS_WARN_STREAM("Making symlink from " << ini_file_path << " to " << target_ini_file << " This is required by NiTE2");
+    boost::filesystem::create_symlink(ini_file_path, cwd + "/NiTE.ini");
+  }
 
   genVideoModeTableMap();
 

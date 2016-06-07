@@ -88,6 +88,10 @@ install(FILES openni2_nodelets.xml
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
+install(FILES etc/NiTE.ini
+        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/etc
+)
+
 # install provided Openni2 and NiTE2 binaries
 install(DIRECTORY "lib/OpenNI2"
         DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION})

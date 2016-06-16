@@ -125,9 +125,11 @@ public:
 
   void setAutoExposure(bool enable) throw (OpenNI2Exception);
   void setAutoWhiteBalance(bool enable) throw (OpenNI2Exception);
+  void setExposure(int exposure) throw (OpenNI2Exception);
 
   bool getAutoExposure() const;
   bool getAutoWhiteBalance() const;
+  int getExposure() const;
 
   void setUseDeviceTimer(bool enable);
 

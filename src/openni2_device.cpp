@@ -553,6 +553,22 @@ void OpenNI2Device::setAutoWhiteBalance(bool enable) throw (OpenNI2Exception)
   }
 }
 
+void OpenNI2Device::setExposure(int exposure) throw (OpenNI2Exception)
+{
+  boost::shared_ptr<openni::VideoStream> stream = getColorVideoStream();
+
+  if (stream)
+  {
+    openni::CameraSettings* camera_settings = stream->getCameraSettings();
+    if (camera_settings)
+    {
+      const openni::Status rc = camera_settings->setExposure(exposure);
+      if (rc != openni::STATUS_OK)
+        THROW_OPENNI_EXCEPTION("Couldn't set exposure: \n%s\n", openni::OpenNI::getExtendedError());
+    }
+  }
+}
+
 bool OpenNI2Device::getAutoExposure() const
 {
   bool ret = false;
@@ -568,6 +584,7 @@ bool OpenNI2Device::getAutoExposure() const
 
   return ret;
 }
+
 bool OpenNI2Device::getAutoWhiteBalance() const
 {
   bool ret = false;
@@ -579,6 +596,22 @@ bool OpenNI2Device::getAutoWhiteBalance() const
     openni::CameraSettings* camera_seeting = stream->getCameraSettings();
     if (camera_seeting)
       ret = camera_seeting->getAutoWhiteBalanceEnabled();
+  }
+
+  return ret;
+}
+
+int OpenNI2Device::getExposure() const
+{
+  int ret = 0;
+
+  boost::shared_ptr<openni::VideoStream> stream = getColorVideoStream();
+
+  if (stream)
+  {
+    openni::CameraSettings* camera_settings = stream->getCameraSettings();
+    if (camera_settings)
+      ret = camera_settings->getExposure();
   }
 
   return ret;

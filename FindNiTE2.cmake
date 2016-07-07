@@ -7,8 +7,8 @@
 # NITE2_LIBRARIES - Libraries needed to use OPENNI.
 ###############################################################################
 
-set(NITE2_INCLUDE_PATH           PATHS ${PROJECT_SOURCE_DIR}/include/NiTE-2   NO_DEFAULT_PATH)
-set(NITE2_LIBRARY_PATH           PATHS ${PROJECT_SOURCE_DIR}/lib              NO_DEFAULT_PATH)
+set(NITE2_INCLUDE_PATH           PATHS /usr/include/NiTE-2   NO_DEFAULT_PATH)
+set(NITE2_LIBRARY_PATH           PATHS /usr/lib              NO_DEFAULT_PATH)
 
 #Find headers
 find_path(NITE2_INCLUDE_DIR             NAMES   NiTE.h                   ${NITE2_INCLUDE_PATH})

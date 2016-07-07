@@ -9,9 +9,9 @@
 
 
 # Dependencies
-set(OPENNI2_INCLUDE_PATH           PATHS ${PROJECT_SOURCE_DIR}/include/OpenNI-2        NO_DEFAULT_PATH)
-set(OPENNI2_LIBRARY_PATH           PATHS ${PROJECT_SOURCE_DIR}/lib                     NO_DEFAULT_PATH)
-set(OPENNI2_DRIVER_LIBRARY_PATH    PATHS ${PROJECT_SOURCE_DIR}/lib//OpenNI2/Drivers    NO_DEFAULT_PATH)
+set(OPENNI2_INCLUDE_PATH           PATHS /usr/include/OpenNI-2        NO_DEFAULT_PATH)
+set(OPENNI2_LIBRARY_PATH           PATHS /usr/lib                     NO_DEFAULT_PATH)
+set(OPENNI2_DRIVER_LIBRARY_PATH    PATHS /usr/lib/OpenNI2/Drivers    NO_DEFAULT_PATH)
 
 #Find headers
 find_path(OPENNI2_ROOT_INCLUDE_DIR      NAMES OpenNI.h                   ${OPENNI2_INCLUDE_PATH})

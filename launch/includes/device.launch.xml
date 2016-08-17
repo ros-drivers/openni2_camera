@@ -20,6 +20,8 @@
   <arg name="auto_white_balance" default="true" />
 
   <arg name="respawn" default="false" />
+  <arg     if="$(arg respawn)" name="bond" value="" />
+  <arg unless="$(arg respawn)" name="bond" value="--no-bond" />
 
   <!-- Remapping arguments -->
   <arg name="rgb"              default="rgb" />
@@ -29,7 +31,7 @@
 
   <!-- Driver nodelet -->
   <node pkg="nodelet" type="nodelet" name="driver"
-        args="load openni2_camera/OpenNI2DriverNodelet $(arg manager)"
+        args="load openni2_camera/OpenNI2DriverNodelet $(arg manager) $(arg bond)"
 	    respawn="$(arg respawn)">
     <param name="device_id" type="str" value="$(arg device_id)" />
     <param name="rgb_camera_info_url"   value="$(arg rgb_camera_info_url)" />

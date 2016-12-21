@@ -716,10 +716,11 @@ std::string OpenNI2Driver::resolveDeviceURI(const std::string& device_id) throw(
         }
       }
     }
-    return matched_uri;
+    if (match_found)
+      return matched_uri;
+    else
+      return "INVALID";
   }
-
-  return "INVALID";
 }
 
 void OpenNI2Driver::initDevice()

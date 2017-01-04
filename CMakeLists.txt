@@ -46,13 +46,14 @@ add_library(openni2_wrapper
    src/openni2_exception.cpp
    src/openni2_video_mode.cpp
 )
+
 target_link_libraries(openni2_wrapper openni2_wrapper ${catkin_LIBRARIES}
                                                       ${OPENNI2_LIBRARIES}
                                                       ${NITE2_LIBRARIES}
                                                       ${Boost_LIBRARIES} )
 
 add_executable(test_wrapper test/test_wrapper.cpp )
-target_link_libraries(test_wrapper openni2_wrapper ${Boost_LIBRARIES})
+target_link_libraries(test_wrapper openni2_wrapper ${Boost_LIBRARIES} ${NITE2_LIBRARIES})
 
 add_library(openni2_driver_lib
    src/openni2_driver.cpp

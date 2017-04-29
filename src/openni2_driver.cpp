@@ -652,7 +652,7 @@ std::string OpenNI2Driver::resolveDeviceURI(const std::string& device_id) throw(
     if (index >= device_id.size() - 1)
     {
       THROW_OPENNI_EXCEPTION(
-        "%s is not a valid device URI, you must give a number after the @, specify 0 for first device",
+        "%s is not a valid device URI, you must give the device number after the @, specify 0 for any device on this bus",
         device_id.c_str());
     }
 
@@ -671,8 +671,9 @@ std::string OpenNI2Driver::resolveDeviceURI(const std::string& device_id) throw(
       if (s.find(bus) != std::string::npos)
       {
         // this matches our bus, check device number
-        --device_number;
-        if (device_number <= 0)
+        std::ostringstream ss;
+        ss << bus << '/' << device_number;
+        if (device_number == 0 || s.find(ss.str()) != std::string::npos)
           return s;
       }
     }
@@ -716,10 +717,11 @@ std::string OpenNI2Driver::resolveDeviceURI(const std::string& device_id) throw(
         }
       }
     }
-    return matched_uri;
+    if (match_found)
+      return matched_uri;
+    else
+      return "INVALID";
   }
-
-  return "INVALID";
 }
 
 void OpenNI2Driver::initDevice()

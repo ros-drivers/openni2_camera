@@ -1,0 +1,1 @@
+DESTDIR=/tmp eval `dpkg-buildflags --export=sh` && catkin config --install --cmake-args -DCMAKE_INSTALL_PREFIX=/opt/pal/dubnium -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCATKIN_BUILD_BINARY_PACKAGE="1" && DESTDIR=/tmp catkin build

@@ -821,6 +821,12 @@ boost::shared_ptr<nite::UserTracker> OpenNI2Device::getUserTracker() const throw
     THROW_OPENNI_EXCEPTION("Not creating user tracking because device has not been initialized");
   }
 
+  boost::shared_ptr<openni::VideoStream> stream = getDepthVideoStream();
+
+  if (stream)
+  {
+    stream->setMirroringEnabled(false);
+  }
   user_tracker_ = boost::make_shared<nite::UserTracker>();
   nite::Status niteRc = user_tracker_->create(openni_device_.get());
   if (niteRc != nite::STATUS_OK)

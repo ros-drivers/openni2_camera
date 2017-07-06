@@ -360,19 +360,19 @@ void OpenNI2Driver::colorConnectCb()
     if (device_->isIRStreamStarted())
     {
       ROS_ERROR("Cannot stream RGB and IR at the same time. Streaming RGB only.");
-      ROS_INFO("Stopping IR stream.");
+      ROS_DEBUG("Stopping IR stream.");
       device_->stopIRStream();
     }
 
     device_->setColorFrameCallback(boost::bind(&OpenNI2Driver::newColorFrameCallback, this, _1));
 
-    ROS_INFO("Starting color stream.");
+    ROS_DEBUG("Starting color stream.");
     device_->startColorStream();
 
   }
   else if (!color_subscribers_ && device_->isColorStreamStarted())
   {
-    ROS_INFO("Stopping color stream.");
+    ROS_DEBUG("Stopping color stream.");
     device_->stopColorStream();
 
     // Start IR if it's been blocked on RGB subscribers
@@ -381,7 +381,7 @@ void OpenNI2Driver::colorConnectCb()
     {
       device_->setIRFrameCallback(boost::bind(&OpenNI2Driver::newIRFrameCallback, this, _1));
 
-      ROS_INFO("Starting IR stream.");
+      ROS_DEBUG("Starting IR stream.");
       device_->startIRStream();
     }
   }
@@ -411,12 +411,12 @@ void OpenNI2Driver::depthConnectCb()
   {
     device_->setDepthFrameCallback(boost::bind(&OpenNI2Driver::newDepthFrameCallback, this, _1));
 
-    ROS_INFO("Starting depth stream.");
+    ROS_DEBUG("Starting depth stream.");
     device_->startDepthStream();
   }
   else if (!need_depth && device_->isDepthStreamStarted())
   {
-    ROS_INFO("Stopping depth stream.");
+    ROS_DEBUG("Stopping depth stream.");
     device_->stopDepthStream();
   }
 }
@@ -438,13 +438,13 @@ void OpenNI2Driver::irConnectCb()
     {
       device_->setIRFrameCallback(boost::bind(&OpenNI2Driver::newIRFrameCallback, this, _1));
 
-      ROS_INFO("Starting IR stream.");
+      ROS_DEBUG("Starting IR stream.");
       device_->startIRStream();
     }
   }
   else if (!ir_subscribers_ && device_->isIRStreamStarted())
   {
-    ROS_INFO("Stopping IR stream.");
+    ROS_DEBUG("Stopping IR stream.");
     device_->stopIRStream();
   }
 }
@@ -461,12 +461,12 @@ void OpenNI2Driver::handTrackerConnectCb()
   {
     device_->setHandTrackerFrameCallback(boost::bind(&OpenNI2Driver::newHandTrackerFrameCallback, this, _1));
 
-    ROS_INFO("Starting hand tracker.");
+    ROS_DEBUG("Starting hand tracker.");
     device_->startHandTracker();
   }
   else if (!need_hand_tracker && device_->isHandTrackerStarted())
   {
-    ROS_INFO("Stopping hand tracker.");
+    ROS_DEBUG("Stopping hand tracker.");
     device_->stopHandTracker();
   }
 }
@@ -580,7 +580,7 @@ void OpenNI2Driver::newHandTrackerFrameCallback(nite::HandTrackerFrameRef handTr
       msg.position3D.y   = gestures[i].getCurrentPosition().y / 1000;
       msg.position3D.z   = gestures[i].getCurrentPosition().z / 1000;
 
-      ROS_INFO_STREAM("Gesture: " << msg.gestureId <<
+      ROS_DEBUG_STREAM("Gesture: " << msg.gestureId <<
                       " at point (" << msg.position3D.x << ", " <<
                       msg.position3D.y << ", " << msg.position3D.z << ")");
 

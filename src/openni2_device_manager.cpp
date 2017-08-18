@@ -117,6 +117,12 @@ public:
     // make sure it does not exist in set before inserting
     device_set_.erase(device_info_wrapped);
     device_set_.insert(device_info_wrapped);
+
+    // Call driver's init process.
+    // TODO: As it is this is always called upon every onDeviceConnected event.
+    //       This doesn't, however, always need to be called. This might be necessary ONLY
+    //       when onDeviceDisconnected event previously but the nodelet is still running.
+    driver_reconnect_function_();
   }
 
 
@@ -249,9 +255,13 @@ boost::shared_ptr<OpenNI2Device> OpenNI2DeviceManager::getAnyDevice()
 }
 boost::shared_ptr<OpenNI2Device> OpenNI2DeviceManager::getDevice(const std::string& device_URI)
 {
+  ROS_INFO("In getDevice");
   return boost::make_shared<OpenNI2Device>(device_URI);
 }
 
+void OpenNI2DeviceManager::registerReconnectCb(std::tr1::function<void()> driver_reconnect){
+  driver_reconnect_function_ = &driver_reconnect;
+}
 
 std::ostream& operator << (std::ostream& stream, const OpenNI2DeviceManager& device_manager) {
 

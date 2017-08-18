@@ -59,6 +59,8 @@ OpenNI2Driver::OpenNI2Driver(ros::NodeHandle& n, ros::NodeHandle& pnh) :
 
   readConfigFromParameterServer();
 
+  device_manager_->registerReconnectCb(&OpenNI2Driver::reconnectDevice);
+
   initDevice();
 
   // Initialize dynamic reconfigure
@@ -742,7 +744,9 @@ void OpenNI2Driver::initDevice()
     try
     {
       std::string device_URI = resolveDeviceURI(device_id_);
+      ROS_DEBUG("[initDevice] device_URI: %s", device_URI.c_str());
       device_ = device_manager_->getDevice(device_URI);
+      ROS_INFO("Post getDevice");
     }
     catch (const OpenNI2Exception& exception)
     {
@@ -925,6 +929,11 @@ sensor_msgs::ImageConstPtr OpenNI2Driver::rawToFloatingPointConversion(sensor_ms
   }
 
   return new_image;
+}
+
+void OpenNI2Driver::reconnectDevice(){
+  ROS_INFO('reconnectDevice.');
+  initDevice();
 }
 
 }

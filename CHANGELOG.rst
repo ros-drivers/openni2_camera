@@ -2,8 +2,8 @@
 Changelog for package openni2_camera
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.2.8 (2017-08-17)
+------------------
 * [capability] Add exposure time control `#46 <https://github.com/ros-drivers/openni2_camera/issues/46>`_
 * [fix] device URI formatting `#47 <https://github.com/ros-drivers/openni2_camera/issues/47>`_
 * Contributors: Martin Guenther, Michael Ferguson, Sergey Alexandrov

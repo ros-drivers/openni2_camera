@@ -5,6 +5,7 @@
     Launch files to start the openni2_camera drivers using rgbd_launch.
   </description>
   <maintainer email="developers@unboundedrobotics.com">Michael Ferguson</maintainer>
+  <maintainer email="gm130s@gmail.com">Isaac I. Y. Saito</maintainer>
   <license>BSD</license>
 
   <author email="kammerl@willowgarage.com">Julius Kammerl</author>

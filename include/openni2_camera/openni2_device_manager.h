@@ -66,6 +66,10 @@ public:
 protected:
   boost::shared_ptr<OpenNI2DeviceListener> device_listener_;
 
+  /**
+   * Member variable of itself in a singleton manner (there's a typo
+   * in the function name).
+   */
   static boost::shared_ptr<OpenNI2DeviceManager> singelton_;
 };
 

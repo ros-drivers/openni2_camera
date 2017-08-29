@@ -59,7 +59,7 @@ OpenNI2Driver::OpenNI2Driver(ros::NodeHandle& n, ros::NodeHandle& pnh) :
 
   readConfigFromParameterServer();
 
-  device_manager_->registerReconnectCb(&OpenNI2Driver::reconnectDevice);
+  device_manager_->registerReconnectCb(std::tr1::bind(&OpenNI2Driver::reconnectDevice, this) );
 
   initDevice();
 

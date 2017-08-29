@@ -62,6 +62,10 @@ class OpenNI2Driver
 {
 public:
   OpenNI2Driver(ros::NodeHandle& n, ros::NodeHandle& pnh) ;
+  /**
+   * Call initDevice function internall.
+   */
+  void reconnectDevice();
 
 private:
   typedef openni2_camera::OpenNI2Config Config;

@@ -73,6 +73,7 @@ OpenNI2Driver::OpenNI2Driver(ros::NodeHandle& n, ros::NodeHandle& pnh) :
   ROS_DEBUG("Dynamic reconfigure configuration received.");
 
   advertiseROSTopics();
+  timer_ = nh_.createTimer(ros::Duration(1.0), &OpenNI2Driver::monitorConnection, this);
 
 }
 
@@ -317,6 +318,11 @@ void OpenNI2Driver::applyConfigToOpenNIDevice()
 
 void OpenNI2Driver::colorConnectCb()
 {
+  if( !device_ )
+  {
+    ROS_WARN_STREAM("Callback in " << __FUNCTION__ <<  "failed due to null device");
+    return;
+  }
   boost::lock_guard<boost::mutex> lock(connect_mutex_);
 
   color_subscribers_ = pub_color_.getNumSubscribers() > 0;
@@ -356,6 +362,11 @@ void OpenNI2Driver::colorConnectCb()
 
 void OpenNI2Driver::depthConnectCb()
 {
+  if( !device_ )
+  {
+    ROS_WARN_STREAM("Callback in " << __FUNCTION__ <<  "failed due to null device");
+    return;
+  }
   boost::lock_guard<boost::mutex> lock(connect_mutex_);
 
   depth_subscribers_ = pub_depth_.getNumSubscribers() > 0;
@@ -379,6 +390,11 @@ void OpenNI2Driver::depthConnectCb()
 
 void OpenNI2Driver::irConnectCb()
 {
+  if( !device_ )
+  {
+    ROS_WARN_STREAM("Callback in " << __FUNCTION__ <<  "failed due to null device");
+    return;
+  }
   boost::lock_guard<boost::mutex> lock(connect_mutex_);
 
   ir_subscribers_ = pub_ir_.getNumSubscribers() > 0;
@@ -766,7 +782,105 @@ void OpenNI2Driver::initDevice()
     boost::this_thread::sleep(boost::posix_time::milliseconds(100));
   }
 
+  bus_id_ = extractBusID(device_->getUri() );
+
 }
+
+
+int OpenNI2Driver::extractBusID(const std::string& uri) const
+{
+  ROS_INFO_STREAM("Extracting bus ID from URI: " << uri);
+  unsigned first = uri.find('@');
+  unsigned last = uri.find('/', first);
+  std::string bus_id = uri.substr (first+1,last-first-1);
+  ROS_INFO_STREAM("Extracted bus id substring: " << bus_id);
+  int rtn = atoi(bus_id.c_str());
+  ROS_INFO_STREAM("Converted bus id from string: " << bus_id << " to " << rtn);
+  return rtn;
+}
+
+
+bool OpenNI2Driver::isConnected() const
+{
+  bool rtn = false;
+  boost::shared_ptr<std::vector<std::string> > list = device_manager_->getConnectedDeviceURIs();
+  for (std::size_t i = 0; i != list->size(); ++i)
+  {
+    ROS_INFO_STREAM("Comparing URI: " << list->at(i));
+    int uri_bus_id = extractBusID( list->at(i) );
+    ROS_INFO_STREAM("Current bus id: " << bus_id_ << " vs URI id: " << uri_bus_id);
+    if( uri_bus_id == bus_id_ )
+    {
+      ROS_INFO_STREAM("Found BUS id match");
+      rtn = true;
+    }
+  }
+  return rtn;
+}
+
+void OpenNI2Driver::monitorConnection(const ros::TimerEvent &event)
+{
+  ROS_INFO_STREAM("Number of connected device: "
+                  << device_manager_->getNumOfConnectedDevices() );
+  if( device_ )
+  {
+    ROS_INFO_STREAM("Device URI: " << device_->getUri());
+    ROS_INFO_STREAM("Bus ID:     " << extractBusID(device_->getUri()) );
+  }
+
+  if( isConnected() )
+  {
+    if( !device_ )
+    {
+      ROS_INFO_STREAM("Detected re-connect...attempting reinit");
+      try
+      {
+        boost::lock_guard<boost::mutex> lock(connect_mutex_);
+        std::string device_URI = resolveDeviceURI(device_id_);
+        device_ = device_manager_->getDevice(device_URI);
+      }
+      catch (const OpenNI2Exception& exception)
+      {
+        if (!device_)
+        {
+          ROS_INFO("No matching device found.... waiting for devices. Reason: %s",
+                   exception.what());
+        }
+      }
+
+      while (ros::ok() && !device_->isValid())
+      {
+        ROS_INFO("Waiting for device initialization, before restarting publishers");
+        boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+      }
+
+      bus_id_ = extractBusID(device_->getUri() );
+//      ROS_INFO_STREAM("Delaying to allow sensor fully come up.");
+//      ros::Duration(5.0).sleep();
+//      ROS_INFO_STREAM("Restarting publishers, if needed");
+      irConnectCb();
+      colorConnectCb();
+      depthConnectCb();
+//      ROS_INFO_STREAM("Done with publishers, if needed");
+    }
+  }
+  else
+  {
+    if( device_ )
+    {
+      ROS_WARN_STREAM("Detected loss of connection.  Stopping all streams");
+      device_->stopAllStreams();
+      device_.reset();
+    }
+    else
+    {
+      ROS_WARN_STREAM("Detected " << device_manager_->getNumOfConnectedDevices()
+                      << " devices, but internal device is NULL");
+    }
+  }
+
+}
+
 
 void OpenNI2Driver::genVideoModeTableMap()
 {

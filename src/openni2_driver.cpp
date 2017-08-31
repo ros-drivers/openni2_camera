@@ -312,18 +312,56 @@ void OpenNI2Driver::applyConfigToOpenNIDevice()
     ROS_ERROR("Could not set auto white balance. Reason: %s", exception.what());
   }
 
+
+  // Workaound for https://github.com/ros-drivers/openni2_camera/issues/51
+  // This is only needed when any of the 3 setting change.  For simplicity
+  // this check is always performed and exposure set.
+  if( (!auto_exposure_ && !auto_white_balance_) && exposure_ != 0 )
+  {
+    ROS_INFO_STREAM("Forcing exposure set, when auto exposure/white balance disabled");
+    forceSetExposure();
+  }
+  else
+  {
+    // Setting the exposure the old way, although this should not have an effect
+    try
+    {
+      if (!config_init_ || (old_config_.exposure != exposure_))
+        device_->setExposure(exposure_);
+    }
+    catch (const OpenNI2Exception& exception)
+    {
+      ROS_ERROR("Could not set exposure. Reason: %s", exception.what());
+    }
+  }
+
+  device_->setUseDeviceTimer(use_device_time_);
+}
+
+
+
+void OpenNI2Driver::forceSetExposure()
+{
+  int current_exposure_ = device_->getExposure();
   try
   {
-    if (!config_init_ || (old_config_.exposure != exposure_))
-      device_->setExposure(exposure_);
+    if( current_exposure_ == exposure_ )
+    {
+      if( exposure_ < 254 )
+      {
+        device_->setExposure(exposure_ + 1);
+      }
+      else
+      {
+        device_->setExposure(exposure_ - 1);
+      }
+    }
+    device_->setExposure(exposure_);
   }
   catch (const OpenNI2Exception& exception)
   {
     ROS_ERROR("Could not set exposure. Reason: %s", exception.what());
   }
-
-  device_->setUseDeviceTimer(use_device_time_);
-
 }
 
 void OpenNI2Driver::colorConnectCb()
@@ -351,6 +389,15 @@ void OpenNI2Driver::colorConnectCb()
 
     ROS_INFO("Starting color stream.");
     device_->startColorStream();
+
+    // Workaound for https://github.com/ros-drivers/openni2_camera/issues/51
+    if( exposure_ != 0 )
+    {
+      ROS_INFO_STREAM("Exposure is set to " << exposure_ << ", forcing on color stream start");
+        //delay for stream to start, before setting exposure
+      boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+      forceSetExposure();
+    }
 
   }
   else if (!color_subscribers_ && device_->isColorStreamStarted())
@@ -862,7 +909,7 @@ void OpenNI2Driver::monitorConnection(const ros::TimerEvent &event)
         // be adjusted properly.  This is a work around for now, but the final
         // implimentation should only allow reconnection when auto exposure and
         // white balance are disabled, and FIXED exposure is used instead.
-        if(!auto_exposure_ || !auto_white_balance_)
+        if((!auto_exposure_ && !auto_white_balance_ ) && exposure_ == 0)
         {
           ROS_WARN_STREAM("Reconnection should not be enabled if auto expousre"
                           << "/white balance are disabled.  Temporarily working"

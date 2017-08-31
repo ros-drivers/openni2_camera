@@ -108,6 +108,8 @@ private:
   int extractBusID(const std::string& uri) const;
   bool isConnected() const;
 
+  void forceSetExposure();
+
   ros::NodeHandle& nh_;
   ros::NodeHandle& pnh_;
 

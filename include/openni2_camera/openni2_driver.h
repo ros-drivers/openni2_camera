@@ -85,6 +85,7 @@ private:
 
   void advertiseROSTopics();
 
+  void monitorConnection(const ros::TimerEvent& event);
   void colorConnectCb();
   void depthConnectCb();
   void irConnectCb();
@@ -104,6 +105,9 @@ private:
   void setColorVideoMode(const OpenNI2VideoMode& color_video_mode);
   void setDepthVideoMode(const OpenNI2VideoMode& depth_video_mode);
 
+  int extractBusID(const std::string& uri) const;
+  bool isConnected() const;
+
   ros::NodeHandle& nh_;
   ros::NodeHandle& pnh_;
 
@@ -111,6 +115,10 @@ private:
   boost::shared_ptr<OpenNI2Device> device_;
 
   std::string device_id_;
+  int bus_id_;
+
+  /** \brief indicates if reconnect logic is enabled. */
+  bool enable_reconnect_;
 
   /** \brief get_serial server*/
   ros::ServiceServer get_serial_server;
@@ -126,6 +134,9 @@ private:
   image_transport::CameraPublisher pub_depth_raw_;
   image_transport::CameraPublisher pub_ir_;
   ros::Publisher pub_projector_info_;
+
+  /** \brief timer for connection monitoring thread */
+  ros::Timer timer_;
 
   /** \brief Camera info manager objects. */
   boost::shared_ptr<camera_info_manager::CameraInfoManager> color_info_manager_, ir_info_manager_;

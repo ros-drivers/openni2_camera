@@ -52,7 +52,8 @@ OpenNI2Driver::OpenNI2Driver(ros::NodeHandle& n, ros::NodeHandle& pnh) :
     ir_subscribers_(false),
     color_subscribers_(false),
     depth_subscribers_(false),
-    depth_raw_subscribers_(false)
+    depth_raw_subscribers_(false),
+    enable_reconnect_(false)
 {
 
   genVideoModeTableMap();
@@ -73,8 +74,17 @@ OpenNI2Driver::OpenNI2Driver(ros::NodeHandle& n, ros::NodeHandle& pnh) :
   ROS_DEBUG("Dynamic reconfigure configuration received.");
 
   advertiseROSTopics();
-  timer_ = nh_.createTimer(ros::Duration(1.0), &OpenNI2Driver::monitorConnection, this);
 
+  if( enable_reconnect_ )
+  {
+    ROS_WARN_STREAM("Reconnect has been enabled, only one camera "
+                    << "should be plugged into each bus");
+    timer_ = nh_.createTimer(ros::Duration(1.0), &OpenNI2Driver::monitorConnection, this);
+  }
+  else
+  {
+    ROS_WARN_STREAM("Reconnect has been disabled");
+  }
 }
 
 void OpenNI2Driver::advertiseROSTopics()
@@ -635,6 +645,8 @@ void OpenNI2Driver::readConfigFromParameterServer()
   pnh_.param("rgb_camera_info_url", color_info_url_, std::string());
   pnh_.param("depth_camera_info_url", ir_info_url_, std::string());
 
+  pnh_.param("enable_reconnect", enable_reconnect_, true);
+
 }
 
 std::string OpenNI2Driver::resolveDeviceURI(const std::string& device_id) throw(OpenNI2Exception)
@@ -759,6 +771,7 @@ void OpenNI2Driver::initDevice()
     {
       std::string device_URI = resolveDeviceURI(device_id_);
       device_ = device_manager_->getDevice(device_URI);
+      bus_id_ = extractBusID(device_->getUri() );
     }
     catch (const OpenNI2Exception& exception)
     {
@@ -782,52 +795,42 @@ void OpenNI2Driver::initDevice()
     boost::this_thread::sleep(boost::posix_time::milliseconds(100));
   }
 
-  bus_id_ = extractBusID(device_->getUri() );
-
 }
 
 
 int OpenNI2Driver::extractBusID(const std::string& uri) const
 {
-  ROS_INFO_STREAM("Extracting bus ID from URI: " << uri);
+  // URI format is <vendor ID>/<product ID>@<bus number>/<device number>
   unsigned first = uri.find('@');
   unsigned last = uri.find('/', first);
   std::string bus_id = uri.substr (first+1,last-first-1);
-  ROS_INFO_STREAM("Extracted bus id substring: " << bus_id);
   int rtn = atoi(bus_id.c_str());
-  ROS_INFO_STREAM("Converted bus id from string: " << bus_id << " to " << rtn);
   return rtn;
 }
 
 
 bool OpenNI2Driver::isConnected() const
 {
-  bool rtn = false;
-  boost::shared_ptr<std::vector<std::string> > list = device_manager_->getConnectedDeviceURIs();
+  // TODO: The current isConnected logic assumes that there is only one sensor
+  // on the bus of interest.  In the future, we could compare serial numbers
+  // to make certain the same camera as been re-connected.
+  boost::shared_ptr<std::vector<std::string> > list =
+      device_manager_->getConnectedDeviceURIs();
   for (std::size_t i = 0; i != list->size(); ++i)
   {
-    ROS_INFO_STREAM("Comparing URI: " << list->at(i));
     int uri_bus_id = extractBusID( list->at(i) );
-    ROS_INFO_STREAM("Current bus id: " << bus_id_ << " vs URI id: " << uri_bus_id);
     if( uri_bus_id == bus_id_ )
     {
-      ROS_INFO_STREAM("Found BUS id match");
-      rtn = true;
+      return true;
     }
   }
-  return rtn;
+  return false;
 }
 
 void OpenNI2Driver::monitorConnection(const ros::TimerEvent &event)
 {
-  ROS_INFO_STREAM("Number of connected device: "
-                  << device_manager_->getNumOfConnectedDevices() );
-  if( device_ )
-  {
-    ROS_INFO_STREAM("Device URI: " << device_->getUri());
-    ROS_INFO_STREAM("Bus ID:     " << extractBusID(device_->getUri()) );
-  }
-
+  // If the connection is lost, clean up the device.  If connected
+  // and the devices is not initialized, then initialize.
   if( isConnected() )
   {
     if( !device_ )
@@ -835,50 +838,69 @@ void OpenNI2Driver::monitorConnection(const ros::TimerEvent &event)
       ROS_INFO_STREAM("Detected re-connect...attempting reinit");
       try
       {
+        {
         boost::lock_guard<boost::mutex> lock(connect_mutex_);
         std::string device_URI = resolveDeviceURI(device_id_);
         device_ = device_manager_->getDevice(device_URI);
+        bus_id_ = extractBusID(device_->getUri() );
+        while (ros::ok() && !device_->isValid())
+        {
+          ROS_INFO("Waiting for device initialization, before configuring and restarting publishers");
+          boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+        }
+        }
+        ROS_INFO_STREAM("Re-applying configuration to camera on re-init");
+        config_init_ = false;
+        applyConfigToOpenNIDevice();
+
+        // The color stream must be started in order to adjust the exposure white
+        // balance.
+        ROS_INFO_STREAM("Starting color stream to adjust camera");
+        colorConnectCb();
+
+        // If auto exposure/white balance is disabled, then the rbg image won't
+        // be adjusted properly.  This is a work around for now, but the final
+        // implimentation should only allow reconnection when auto exposure and
+        // white balance are disabled, and FIXED exposure is used instead.
+        if(!auto_exposure_ || !auto_white_balance_)
+        {
+          ROS_WARN_STREAM("Reconnection should not be enabled if auto expousre"
+                          << "/white balance are disabled.  Temporarily working"
+                          << " around this issue");
+          ROS_WARN_STREAM("Toggling exposure and white balance to auto on re-connect"
+                          << ", otherwise image will be very dark");
+          device_->setAutoExposure(true);
+          device_->setAutoWhiteBalance(true);
+          ROS_INFO_STREAM("Waiting for color camera to come up and adjust");
+          // It takes about 2.5 seconds for the camera to adjust
+          boost::this_thread::sleep(boost::posix_time::milliseconds(2500));
+          ROS_WARN_STREAM("Resetting auto exposure and white balance to previous values");
+          device_->setAutoExposure(auto_exposure_);
+          device_->setAutoWhiteBalance(auto_white_balance_);
+        }
+
+        ROS_INFO_STREAM("Restarting publishers, if needed");
+        irConnectCb();
+        depthConnectCb();
+        ROS_INFO_STREAM("Done re-initializing cameras");
       }
+
       catch (const OpenNI2Exception& exception)
       {
         if (!device_)
         {
-          ROS_INFO("No matching device found.... waiting for devices. Reason: %s",
-                   exception.what());
+          ROS_INFO_STREAM("Failed to re-initialize device on bus: " << bus_id_
+                          << ", reason: " << exception.what());
         }
       }
-
-      while (ros::ok() && !device_->isValid())
-      {
-        ROS_INFO("Waiting for device initialization, before restarting publishers");
-        boost::this_thread::sleep(boost::posix_time::milliseconds(100));
-      }
-
-      bus_id_ = extractBusID(device_->getUri() );
-//      ROS_INFO_STREAM("Delaying to allow sensor fully come up.");
-//      ros::Duration(5.0).sleep();
-//      ROS_INFO_STREAM("Restarting publishers, if needed");
-      irConnectCb();
-      colorConnectCb();
-      depthConnectCb();
-//      ROS_INFO_STREAM("Done with publishers, if needed");
     }
   }
-  else
+  else if( device_ )
   {
-    if( device_ )
-    {
-      ROS_WARN_STREAM("Detected loss of connection.  Stopping all streams");
-      device_->stopAllStreams();
-      device_.reset();
-    }
-    else
-    {
-      ROS_WARN_STREAM("Detected " << device_manager_->getNumOfConnectedDevices()
-                      << " devices, but internal device is NULL");
-    }
+    ROS_WARN_STREAM("Detected loss of connection.  Stopping all streams and resetting device");
+    device_->stopAllStreams();
+    device_.reset();
   }
-
 }
 
 

@@ -117,6 +117,9 @@ private:
   std::string device_id_;
   int bus_id_;
 
+  /** \brief indicates if reconnect logic is enabled. */
+  bool enable_reconnect_;
+
   /** \brief get_serial server*/
   ros::ServiceServer get_serial_server;
 
@@ -132,7 +135,7 @@ private:
   image_transport::CameraPublisher pub_ir_;
   ros::Publisher pub_projector_info_;
 
-  // timer object
+  /** \brief timer for connection monitoring thread */
   ros::Timer timer_;
 
   /** \brief Camera info manager objects. */

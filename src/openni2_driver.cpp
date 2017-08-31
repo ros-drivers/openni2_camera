@@ -394,6 +394,8 @@ void OpenNI2Driver::colorConnectCb()
     if( exposure_ != 0 )
     {
       ROS_INFO_STREAM("Exposure is set to " << exposure_ << ", forcing on color stream start");
+        //delay for stream to start, before setting exposure
+      boost::this_thread::sleep(boost::posix_time::milliseconds(100));
       forceSetExposure();
     }
 
@@ -907,7 +909,7 @@ void OpenNI2Driver::monitorConnection(const ros::TimerEvent &event)
         // be adjusted properly.  This is a work around for now, but the final
         // implimentation should only allow reconnection when auto exposure and
         // white balance are disabled, and FIXED exposure is used instead.
-        if(!auto_exposure_ || !auto_white_balance_)
+        if((!auto_exposure_ && !auto_white_balance_ ) && exposure_ == 0)
         {
           ROS_WARN_STREAM("Reconnection should not be enabled if auto expousre"
                           << "/white balance are disabled.  Temporarily working"

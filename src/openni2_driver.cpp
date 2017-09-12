@@ -140,11 +140,14 @@ void OpenNI2Driver::advertiseROSTopics()
 
   // The camera names are set to [rgb|depth]_[serial#], e.g. depth_B00367707227042B.
   // camera_info_manager substitutes this for ${NAME} in the URL.
-  std::string serial_number = device_->getStringID();
+  std::string serial_number;
   std::string color_name, ir_name;
 
-  color_name = "rgb_"   + serial_number;
-  ir_name  = "depth_" + serial_number;
+  serial_number = device_manager_->getSerial(device_->getUri());
+  ROS_INFO_STREAM("Loading camera info manager, using camera serial number: " << serial_number);
+
+  color_name = serial_number + "_rgb";
+  ir_name    = serial_number + "_ir";
 
   // Load the saved calibrations, if they exist
   color_info_manager_ = boost::make_shared<camera_info_manager::CameraInfoManager>(color_nh, color_name, color_info_url_);

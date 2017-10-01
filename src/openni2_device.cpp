@@ -30,6 +30,7 @@
  */
 
 #include "OpenNI.h"
+#include <PS1080.h> // For XN_STREAM_PROPERTY_EMITTER_DCMOS_DISTANCE property
 
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string/replace.hpp>
@@ -169,6 +170,20 @@ float OpenNI2Device::getDepthFocalLength(int output_y_resolution) const
   }
 
   return focal_length;
+}
+
+float OpenNI2Device::getBaseline() const
+{
+  float baseline = 0.075f;
+  boost::shared_ptr<openni::VideoStream> stream = getDepthVideoStream();
+
+  if (stream && stream->isPropertySupported(XN_STREAM_PROPERTY_EMITTER_DCMOS_DISTANCE))
+  {
+    double baseline_meters;
+    stream->getProperty(XN_STREAM_PROPERTY_EMITTER_DCMOS_DISTANCE, &baseline_meters); // Device specific -- from PS1080.h
+    baseline = static_cast<float>(baseline_meters * 0.01f);  // baseline from cm -> meters
+  }
+  return baseline;
 }
 
 bool OpenNI2Device::isIRVideoModeSupported(const OpenNI2VideoMode& video_mode) const

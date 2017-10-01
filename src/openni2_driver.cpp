@@ -88,6 +88,7 @@ void OpenNI2Driver::advertiseROSTopics()
   image_transport::ImageTransport depth_it(depth_nh);
   ros::NodeHandle depth_raw_nh(nh_, "depth");
   image_transport::ImageTransport depth_raw_it(depth_raw_nh);
+  ros::NodeHandle projector_nh(nh_, "projector");
   // Advertise all published topics
 
   // Prevent connection callbacks from executing until we've set all the publishers. Otherwise
@@ -117,6 +118,7 @@ void OpenNI2Driver::advertiseROSTopics()
     ros::SubscriberStatusCallback rssc = boost::bind(&OpenNI2Driver::depthConnectCb, this);
     pub_depth_raw_ = depth_it.advertiseCamera("image_raw", 1, itssc, itssc, rssc, rssc);
     pub_depth_ = depth_raw_it.advertiseCamera("image", 1, itssc, itssc, rssc, rssc);
+    pub_projector_info_ = projector_nh.advertise<sensor_msgs::CameraInfo>("camera_info", 1, rssc, rssc);
   }
 
   ////////// CAMERA INFO MANAGER
@@ -360,6 +362,7 @@ void OpenNI2Driver::depthConnectCb()
 
   depth_subscribers_ = pub_depth_.getNumSubscribers() > 0;
   depth_raw_subscribers_ = pub_depth_raw_.getNumSubscribers() > 0;
+  projector_info_subscribers_ = pub_projector_info_.getNumSubscribers() > 0;
 
   bool need_depth = depth_subscribers_ || depth_raw_subscribers_;
 
@@ -444,7 +447,7 @@ void OpenNI2Driver::newDepthFrameCallback(sensor_msgs::ImagePtr image)
 
     data_skip_depth_counter_ = 0;
 
-    if (depth_raw_subscribers_||depth_subscribers_)
+    if (depth_raw_subscribers_||depth_subscribers_||projector_info_subscribers_)
     {
       image->header.stamp = image->header.stamp + depth_time_offset_;
 
@@ -485,6 +488,12 @@ void OpenNI2Driver::newDepthFrameCallback(sensor_msgs::ImagePtr image)
       {
         sensor_msgs::ImageConstPtr floating_point_image = rawToFloatingPointConversion(image);
         pub_depth_.publish(floating_point_image, cam_info);
+      }
+
+      // Projector "info" probably only useful for working with disparity images
+      if (projector_info_subscribers_)
+      {
+        pub_projector_info_.publish(getProjectorCameraInfo(image->width, image->height, image->header.stamp));
       }
     }
   }
@@ -596,6 +605,17 @@ sensor_msgs::CameraInfoPtr OpenNI2Driver::getDepthCameraInfo(int width, int heig
   info->P[6] -= depth_ir_offset_y_*scaling; // cy
 
   /// @todo Could put this in projector frame so as to encode the baseline in P[3]
+  return info;
+}
+
+sensor_msgs::CameraInfoPtr OpenNI2Driver::getProjectorCameraInfo(int width, int height, ros::Time time) const
+{
+  // The projector info is simply the depth info with the baseline encoded in the P matrix.
+  // It's only purpose is to be the "right" camera info to the depth camera's "left" for
+  // processing disparity images.
+  sensor_msgs::CameraInfoPtr info = getDepthCameraInfo(width, height, time);
+  // Tx = -baseline * fx
+  info->P[3] = -device_->getBaseline() * info->P[0];
   return info;
 }
 

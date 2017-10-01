@@ -76,6 +76,7 @@ private:
   sensor_msgs::CameraInfoPtr getColorCameraInfo(int width, int height, ros::Time time) const;
   sensor_msgs::CameraInfoPtr getIRCameraInfo(int width, int height, ros::Time time) const;
   sensor_msgs::CameraInfoPtr getDepthCameraInfo(int width, int height, ros::Time time) const;
+  sensor_msgs::CameraInfoPtr getProjectorCameraInfo(int width, int height, ros::Time time) const;
 
   void readConfigFromParameterServer();
 
@@ -169,6 +170,7 @@ private:
   bool color_subscribers_;
   bool depth_subscribers_;
   bool depth_raw_subscribers_;
+  bool projector_info_subscribers_;
 
   bool use_device_time_;
 

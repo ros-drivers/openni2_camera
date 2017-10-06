@@ -7,7 +7,7 @@ find_package(catkin REQUIRED COMPONENTS camera_info_manager
                                         nodelet
                                         sensor_msgs
                                         roscpp
-                                        pal_vision_msgs                                        
+                                        pal_detection_msgs
                                         cv_bridge
                                         tf)
 
@@ -25,7 +25,7 @@ generate_dynamic_reconfigure_options(cfg/OpenNI2.cfg)
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES openni2_wrapper
-  CATKIN_DEPENDS camera_info_manager dynamic_reconfigure image_transport nodelet sensor_msgs roscpp pal_vision_msgs cv_bridge tf
+  CATKIN_DEPENDS camera_info_manager dynamic_reconfigure image_transport nodelet sensor_msgs roscpp pal_detection_msgs cv_bridge tf
 )
 link_directories(/usr/lib/OpenNI2/Drivers)
 
@@ -59,6 +59,7 @@ target_link_libraries(test_wrapper openni2_wrapper ${Boost_LIBRARIES} ${NITE2_LI
 add_library(openni2_driver_lib
    src/openni2_driver.cpp
 )
+add_dependencies(openni2_driver_lib pal_detection_msgs_generate_messages_cpp)
 target_link_libraries(openni2_driver_lib openni2_wrapper ${catkin_LIBRARIES} ${Boost_LIBRARIES} )
 add_dependencies(openni2_driver_lib ${PROJECT_NAME}_gencfg)
 

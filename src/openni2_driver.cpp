@@ -33,7 +33,7 @@
 #include "openni2_camera/openni2_exception.h"
 
 // PAL headers
-#include <pal_vision_msgs/Gesture.h>
+#include <pal_detection_msgs/Gesture.h>
 #include <pal_detection_msgs/PersonDetections.h>
 
 // ROS headers
@@ -148,7 +148,7 @@ void OpenNI2Driver::advertiseROSTopics()
   if ( device_->hasHandTracker() )
   {
     ros::SubscriberStatusCallback rssc = boost::bind(&OpenNI2Driver::handTrackerConnectCb, this);
-    pub_gestures_ = nh_.advertise<pal_vision_msgs::Gesture>("gestures", 1, rssc, rssc);
+    pub_gestures_ = nh_.advertise<pal_detection_msgs::Gesture>("gestures", 1, rssc, rssc);
   }
 
   if ( device_->hasUserTracker() )
@@ -572,7 +572,7 @@ void OpenNI2Driver::newHandTrackerFrameCallback(nite::HandTrackerFrameRef handTr
   {
     if ( gestures[i].isComplete() )
     {
-      pal_vision_msgs::Gesture msg;
+      pal_detection_msgs::Gesture msg;
       msg.header.stamp = now;
       msg.header.frame_id = depth_frame_id_;
       msg.gestureId = getGestureName(gestures[i].getType());

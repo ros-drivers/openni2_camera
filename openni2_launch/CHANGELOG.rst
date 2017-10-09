@@ -2,6 +2,9 @@
 Changelog for package openni2_launch
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.2.2 (2015-01-23)
 ------------------
 * add tf_prefix version, as per `#16 <https://github.com/ros-drivers/openni2_launch/issues/16>`_

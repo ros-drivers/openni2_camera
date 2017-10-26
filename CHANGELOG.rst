@@ -2,8 +2,8 @@
 Changelog for package openni2_camera
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.2.9 (2017-10-25)
+------------------
 * [fix] Device re-connection `#53 <https://github.com/ros-drivers/openni2_camera/issues/53>`_
 * [fix] Publish projector/camera_info (fixes disparity img) `#48 <https://github.com/ros-drivers/openni2_camera/issues/48>`_
 * Contributors: Isaac I.Y. Saito, Martin Guenther, Shaun Edwards

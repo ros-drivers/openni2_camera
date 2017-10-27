@@ -54,4 +54,4 @@ private:
 }
 
 #include <pluginlib/class_list_macros.h>
-PLUGINLIB_DECLARE_CLASS(openni2_camera, OpenNI2DriverNodelet, openni2_camera::OpenNI2DriverNodelet, nodelet::Nodelet);
+PLUGINLIB_EXPORT_CLASS(openni2_camera::OpenNI2DriverNodelet, nodelet::Nodelet)

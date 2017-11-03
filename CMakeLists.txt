@@ -51,7 +51,7 @@ add_library(openni2_driver_lib
    src/openni2_driver.cpp
 )
 target_link_libraries(openni2_driver_lib openni2_wrapper ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OPENNI2_LIBRARIES})
-add_dependencies(openni2_driver_lib ${PROJECT_NAME}_gencfg)
+add_dependencies(openni2_driver_lib ${PROJECT_NAME}_gencfg ${PROJECT_NAME}_generate_messages_cpp)
 
 add_library(openni2_camera_nodelet
    ros/openni2_camera_nodelet.cpp

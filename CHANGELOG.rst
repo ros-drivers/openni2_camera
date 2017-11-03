@@ -2,6 +2,30 @@
 Changelog for package openni2_camera
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.2.9 (2017-10-25)
+------------------
+* [fix] Device re-connection `#53 <https://github.com/ros-drivers/openni2_camera/issues/53>`_
+* [fix] Publish projector/camera_info (fixes disparity img) `#48 <https://github.com/ros-drivers/openni2_camera/issues/48>`_
+* Contributors: Isaac I.Y. Saito, Martin Guenther, Shaun Edwards
+
+0.2.8 (2017-08-17)
+------------------
+* [capability] Add exposure time control `#46 <https://github.com/ros-drivers/openni2_camera/issues/46>`_
+* [fix] device URI formatting `#47 <https://github.com/ros-drivers/openni2_camera/issues/47>`_
+* Contributors: Martin Guenther, Michael Ferguson, Sergey Alexandrov
+
+0.2.7 (2016-06-07)
+------------------
+* Merge pull request `#44 <https://github.com/ros-drivers/openni2_camera/issues/44>`_ from jacquelinekay/fix_kinetic_build
+  fix compile on kinetic
+* Contributors: Jackie Kay, Michael Ferguson
+
+0.2.6 (2016-05-05)
+------------------
+* [fix] Compile for OSX `#30 <https://github.com/ros-drivers/openni2_camera/issues/30>`_
+* [fix] Crash on OSX and warning fixes.
+* Contributors: Hans Gaiser, Isaac I.Y. Saito, Michael Ferguson
+
 0.2.5 (2015-10-15)
 ------------------
 * Merge pull request `#34 <https://github.com/ros-drivers/openni2_camera/issues/34>`_ from Intermodalics/feature/get_serial_service

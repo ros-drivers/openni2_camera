@@ -30,6 +30,7 @@
  */
 
 #include "ni2/OpenNI.h"
+#include <PS1080.h> // For XN_STREAM_PROPERTY_EMITTER_DCMOS_DISTANCE property
 
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string/replace.hpp>
@@ -169,6 +170,20 @@ float OpenNI2Device::getDepthFocalLength(int output_y_resolution) const
   }
 
   return focal_length;
+}
+
+float OpenNI2Device::getBaseline() const
+{
+  float baseline = 0.075f;
+  boost::shared_ptr<openni::VideoStream> stream = getDepthVideoStream();
+
+  if (stream && stream->isPropertySupported(XN_STREAM_PROPERTY_EMITTER_DCMOS_DISTANCE))
+  {
+    double baseline_meters;
+    stream->getProperty(XN_STREAM_PROPERTY_EMITTER_DCMOS_DISTANCE, &baseline_meters); // Device specific -- from PS1080.h
+    baseline = static_cast<float>(baseline_meters * 0.01f);  // baseline from cm -> meters
+  }
+  return baseline;
 }
 
 bool OpenNI2Device::isIRVideoModeSupported(const OpenNI2VideoMode& video_mode) const
@@ -553,6 +568,22 @@ void OpenNI2Device::setAutoWhiteBalance(bool enable) throw (OpenNI2Exception)
   }
 }
 
+void OpenNI2Device::setExposure(int exposure) throw (OpenNI2Exception)
+{
+  boost::shared_ptr<openni::VideoStream> stream = getColorVideoStream();
+
+  if (stream)
+  {
+    openni::CameraSettings* camera_settings = stream->getCameraSettings();
+    if (camera_settings)
+    {
+      const openni::Status rc = camera_settings->setExposure(exposure);
+      if (rc != openni::STATUS_OK)
+        THROW_OPENNI_EXCEPTION("Couldn't set exposure: \n%s\n", openni::OpenNI::getExtendedError());
+    }
+  }
+}
+
 bool OpenNI2Device::getAutoExposure() const
 {
   bool ret = false;
@@ -568,6 +599,7 @@ bool OpenNI2Device::getAutoExposure() const
 
   return ret;
 }
+
 bool OpenNI2Device::getAutoWhiteBalance() const
 {
   bool ret = false;
@@ -579,6 +611,22 @@ bool OpenNI2Device::getAutoWhiteBalance() const
     openni::CameraSettings* camera_seeting = stream->getCameraSettings();
     if (camera_seeting)
       ret = camera_seeting->getAutoWhiteBalanceEnabled();
+  }
+
+  return ret;
+}
+
+int OpenNI2Device::getExposure() const
+{
+  int ret = 0;
+
+  boost::shared_ptr<openni::VideoStream> stream = getColorVideoStream();
+
+  if (stream)
+  {
+    openni::CameraSettings* camera_settings = stream->getCameraSettings();
+    if (camera_settings)
+      ret = camera_settings->getExposure();
   }
 
   return ret;

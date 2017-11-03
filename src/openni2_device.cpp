@@ -29,7 +29,7 @@
  *      Author: Julius Kammerl (jkammerl@willowgarage.com)
  */
 
-#include "OpenNI.h"
+#include "ni2/OpenNI.h"
 #include <PS1080.h> // For XN_STREAM_PROPERTY_EMITTER_DCMOS_DISTANCE property
 
 #include <boost/lexical_cast.hpp>

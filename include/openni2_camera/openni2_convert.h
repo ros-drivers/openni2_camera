@@ -36,7 +36,7 @@
 #include "openni2_camera/openni2_device_info.h"
 #include "openni2_camera/openni2_video_mode.h"
 
-#include "OpenNI.h"
+#include "ni2/OpenNI.h"
 
 #include <vector>
 

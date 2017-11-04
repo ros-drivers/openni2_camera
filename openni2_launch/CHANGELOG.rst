@@ -2,8 +2,8 @@
 Changelog for package openni2_launch
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.3.0 (2017-11-03)
+------------------
 * Move openni2_launch package into openni2_camera repository `#55 <https://github.com/ros-drivers/openni2_camera/issues/55>`_
 * Add rosdoc-based document.
 * Contributors: Isaac I.Y. Saito

@@ -15,25 +15,21 @@ notifications:
       - gm130s@gmail.com
 env:
   matrix:
-    - ROS_DISTRO="indigo" ROS_REPOSITORY_PATH=http://packages.ros.org/ros/ubuntu
-    - ROS_DISTRO="indigo" ROS_REPOSITORY_PATH=http://packages.ros.org/ros-shadow-fixed/ubuntu
+    - ROS_DISTRO="indigo" ROS_REPO=ros
+    - ROS_DISTRO="indigo" ROS_REPO=ros-shadow-fixed
     - ROS_DISTRO="indigo" PRERELEASE=true
-    - ROS_DISTRO="jade"   ROS_REPOSITORY_PATH=http://packages.ros.org/ros/ubuntu ABICHECK_URL='github:ros-drivers/openni2_camera#indigo-devel'
-    - ROS_DISTRO="jade"   ROS_REPOSITORY_PATH=http://packages.ros.org/ros-shadow-fixed/ubuntu ABICHECK_URL='github:ros-drivers/openni2_camera#indigo-devel'
-    - ROS_DISTRO="jade"   PRERELEASE=true
-    - ROS_DISTRO="kinetic"   ROS_REPOSITORY_PATH=http://packages.ros.org/ros/ubuntu ABICHECK_URL='github:ros-drivers/openni2_camera#indigo-devel'
-    - ROS_DISTRO="kinetic"   ROS_REPOSITORY_PATH=http://packages.ros.org/ros-shadow-fixed/ubuntu ABICHECK_URL='github:ros-drivers/openni2_camera#indigo-devel'
+    - ROS_DISTRO="jade"   ROS_REPO=ros
+    - ROS_DISTRO="kinetic"   ROS_REPO=ros ABICHECK_URL='github:ros-drivers/openni2_camera#indigo-devel'
+    - ROS_DISTRO="kinetic"   ROS_REPO=ros-shadow-fixed ABICHECK_URL='github:ros-drivers/openni2_camera#indigo-devel'
     - ROS_DISTRO="kinetic"   PRERELEASE=true
-    - ROS_DISTRO="lunar"   ROS_REPOSITORY_PATH=http://packages.ros.org/ros/ubuntu ABICHECK_URL='github:ros-drivers/openni2_camera#indigo-devel'
-    - ROS_DISTRO="lunar"   ROS_REPOSITORY_PATH=http://packages.ros.org/ros-shadow-fixed/ubuntu ABICHECK_URL='github:ros-drivers/openni2_camera#indigo-devel'
+    - ROS_DISTRO="lunar"   ROS_REPO=ros ABICHECK_URL='github:ros-drivers/openni2_camera#indigo-devel'
+    - ROS_DISTRO="lunar"   ROS_REPO=ros-shadow-fixed ABICHECK_URL='github:ros-drivers/openni2_camera#indigo-devel'
     - ROS_DISTRO="lunar"   PRERELEASE=true
 matrix:
   allow_failures:
     - env: ROS_DISTRO="indigo"  PRERELEASE=true  # Run docker-based ROS prerelease test http://wiki.ros.org/bloom/Tutorials/PrereleaseTest Because we might not want to run prerelease test for all PRs, it's omitted from pass-fail criteria.
     - env: ROS_DISTRO="indigo" PRERELEASE=true
-    - env: ROS_DISTRO="jade"   ROS_REPOSITORY_PATH=http://packages.ros.org/ros/ubuntu
-    - env: ROS_DISTRO="jade"   ROS_REPOSITORY_PATH=http://packages.ros.org/ros-shadow-fixed/ubuntu
-    - env: ROS_DISTRO="jade"   PRERELEASE=true
+    - env: ROS_DISTRO="jade"   ROS_REPO=ros
     - env: ROS_DISTRO="kinetic"   PRERELEASE=true
     - env: ROS_DISTRO="lunar"   PRERELEASE=true
 install:

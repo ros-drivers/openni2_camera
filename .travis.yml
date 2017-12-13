@@ -18,14 +18,14 @@ env:
     - ROS_DISTRO="indigo" ROS_REPOSITORY_PATH=http://packages.ros.org/ros/ubuntu
     - ROS_DISTRO="indigo" ROS_REPOSITORY_PATH=http://packages.ros.org/ros-shadow-fixed/ubuntu
     - ROS_DISTRO="indigo" PRERELEASE=true
-    - ROS_DISTRO="jade"   ROS_REPOSITORY_PATH=http://packages.ros.org/ros/ubuntu
-    - ROS_DISTRO="jade"   ROS_REPOSITORY_PATH=http://packages.ros.org/ros-shadow-fixed/ubuntu
+    - ROS_DISTRO="jade"   ROS_REPOSITORY_PATH=http://packages.ros.org/ros/ubuntu ABICHECK_URL='github:ros-drivers/openni2_camera#indigo-devel'
+    - ROS_DISTRO="jade"   ROS_REPOSITORY_PATH=http://packages.ros.org/ros-shadow-fixed/ubuntu ABICHECK_URL='github:ros-drivers/openni2_camera#indigo-devel'
     - ROS_DISTRO="jade"   PRERELEASE=true
-    - ROS_DISTRO="kinetic"   ROS_REPOSITORY_PATH=http://packages.ros.org/ros/ubuntu
-    - ROS_DISTRO="kinetic"   ROS_REPOSITORY_PATH=http://packages.ros.org/ros-shadow-fixed/ubuntu
+    - ROS_DISTRO="kinetic"   ROS_REPOSITORY_PATH=http://packages.ros.org/ros/ubuntu ABICHECK_URL='github:ros-drivers/openni2_camera#indigo-devel'
+    - ROS_DISTRO="kinetic"   ROS_REPOSITORY_PATH=http://packages.ros.org/ros-shadow-fixed/ubuntu ABICHECK_URL='github:ros-drivers/openni2_camera#indigo-devel'
     - ROS_DISTRO="kinetic"   PRERELEASE=true
-    - ROS_DISTRO="lunar"   ROS_REPOSITORY_PATH=http://packages.ros.org/ros/ubuntu
-    - ROS_DISTRO="lunar"   ROS_REPOSITORY_PATH=http://packages.ros.org/ros-shadow-fixed/ubuntu
+    - ROS_DISTRO="lunar"   ROS_REPOSITORY_PATH=http://packages.ros.org/ros/ubuntu ABICHECK_URL='github:ros-drivers/openni2_camera#indigo-devel'
+    - ROS_DISTRO="lunar"   ROS_REPOSITORY_PATH=http://packages.ros.org/ros-shadow-fixed/ubuntu ABICHECK_URL='github:ros-drivers/openni2_camera#indigo-devel'
     - ROS_DISTRO="lunar"   PRERELEASE=true
 matrix:
   allow_failures:

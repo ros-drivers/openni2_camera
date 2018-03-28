@@ -67,6 +67,8 @@ void OpenNI2FrameListener::onNewFrame(openni::VideoStream& stream)
   {
     sensor_msgs::ImagePtr image(new sensor_msgs::Image);
 
+    image->header.seq = m_frame.getFrameIndex();
+
     ros::Time ros_now = ros::Time::now();
 
     if (!user_device_timer_)

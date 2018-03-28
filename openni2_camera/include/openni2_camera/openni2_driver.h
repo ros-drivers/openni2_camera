@@ -169,6 +169,9 @@ private:
   ros::Duration color_time_offset_;
   ros::Duration depth_time_offset_;
 
+  ros::Time current_sync_color_depth_stamp_;
+  unsigned int sync_frame_index_;
+
   int data_skip_;
 
   int data_skip_ir_counter_;

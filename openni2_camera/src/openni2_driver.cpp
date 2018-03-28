@@ -46,6 +46,7 @@ OpenNI2Driver::OpenNI2Driver(ros::NodeHandle& n, ros::NodeHandle& pnh) :
     pnh_(pnh),
     device_manager_(OpenNI2DeviceManager::getSingelton()),
     config_init_(false),
+    sync_frame_index_(0),
     data_skip_ir_counter_(0),
     data_skip_color_counter_(0),
     data_skip_depth_counter_ (0),
@@ -60,6 +61,7 @@ OpenNI2Driver::OpenNI2Driver(ros::NodeHandle& n, ros::NodeHandle& pnh) :
 
   readConfigFromParameterServer();
 
+  current_sync_color_depth_stamp_ = ros::Time::now();
   initDevice();
 
   // Initialize dynamic reconfigure
@@ -506,7 +508,18 @@ void OpenNI2Driver::newColorFrameCallback(sensor_msgs::ImagePtr image)
     if (color_subscribers_)
     {
       image->header.frame_id = color_frame_id_;
-      image->header.stamp = image->header.stamp + color_time_offset_;
+      if (color_depth_synchronization_ && image->header.seq == sync_frame_index_)
+      {
+        image->header.stamp = current_sync_color_depth_stamp_;
+      }
+      else
+      {
+        image->header.stamp = image->header.stamp + color_time_offset_;
+        if (sync_frame_index_ < image->header.seq) {
+          current_sync_color_depth_stamp_ = image->header.stamp;
+          sync_frame_index_ = image->header.seq;
+        }
+      }
 
       pub_color_.publish(image, getColorCameraInfo(image->width, image->height, image->header.stamp));
     }
@@ -522,7 +535,19 @@ void OpenNI2Driver::newDepthFrameCallback(sensor_msgs::ImagePtr image)
 
     if (depth_raw_subscribers_||depth_subscribers_||projector_info_subscribers_)
     {
-      image->header.stamp = image->header.stamp + depth_time_offset_;
+      if (color_depth_synchronization_ && image->header.seq == sync_frame_index_)
+      {
+        image->header.stamp = current_sync_color_depth_stamp_;
+      }
+      else
+      {
+        image->header.stamp = image->header.stamp + depth_time_offset_;
+        if (sync_frame_index_ < image->header.seq)
+        {
+          current_sync_color_depth_stamp_ = image->header.stamp;
+          sync_frame_index_ = image->header.seq;
+        }
+      }
 
       if (z_offset_mm_ != 0)
       {

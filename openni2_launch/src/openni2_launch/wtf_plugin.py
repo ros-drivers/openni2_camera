@@ -30,11 +30,42 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 from __future__ import print_function
+import logging
 import re
 import subprocess
 
 import rospy
 from roswtf.rules import warning_rule, error_rule
+
+
+def _device_notfound_subproc(id_manufacturer, id_product):
+    """
+    @rtype: [dict]
+    @return: Example:
+
+                        [{'device': '/dev/bus/usb/002/004', 'tag': 'Lenovo ', 'id': '17ef:305a'},
+                         {'device': '/dev/bus/usb/002/001', 'tag': 'Linux Foundation 3.0 root hub', 'id': '1d6b:0003'},
+                         {'device': '/dev/bus/usb/001/006', 'tag': 'Validity Sensors, Inc. ', 'id': '138a:0090'},,,]
+
+    @note: This method depends on Linux command (via subprocess), which makes
+                 this command platform-dependent. Ubuntu Xenial onward, a Python module
+                 that encapsulate platform operation becomes available so this method
+                 can be wiped out. See https://github.com/ros-drivers/openni2_camera/pull/80#discussion_r193295442
+    """
+    device_re = re.compile("Bus\s+(?P<bus>\d+)\s+Device\s+(?P<device>\d+).+ID\s(?P<id>\w+:\w+)\s(?P<tag>.+)$", re.I)
+    df = subprocess.check_output("lsusb")
+    devices = []
+    for i in df.split('\n'):
+        if i:
+            info = device_re.match(i)
+            if info:
+                dinfo = info.groupdict()
+                logging.debug("dinfo: {}, dinfo.id: {}".format(dinfo, dinfo["id"]))
+                if dinfo["id"] == "{}:{}".format(id_manufacturer, id_product):
+                    dinfo['device'] = "/dev/bus/usb/{}/{}".format(dinfo.pop('bus'), dinfo.pop('device'))
+                    devices.append(dinfo)
+    logging.info("#devices: {}\ndevices: {}".format(len(devices), devices))
+    return devices
 
 
 def sensor_notfound(ctx):
@@ -47,8 +78,9 @@ def sensor_notfound(ctx):
     num_sensors_expected = rospy.get_param("openni2_num_sensors_expected", 1)
     # TODO: The set of manufacture id and prod id is specific to Asus Xtion.
     #       There may be other openni2-based devices.
-    devices = usb.core.find(idVendor=0x1d27, idProduct=0x0601, find_all=True)
-    num_sensors = sum(1 for _ in devices)
+    devices = _device_notfound_subproc(
+        id_manufacturer="1d27", id_product="0601")
+    num_sensors = len(devices)
     if num_sensors != num_sensors_expected:
         errors.append("{} openni2 sensors found (expected: {}).".format(
             num_sensors, num_sensors_expected))

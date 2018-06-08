@@ -71,8 +71,11 @@ def _device_notfound_subproc(id_manufacturer, id_product):
 def sensor_notfound(ctx):
     """
     @summary: Check if expected number of sensors are found.
-                          Expected number of sensors can be set by
-                          ROS Parameter 'openni2_num_sensors_expected'.
+              Expected number of sensors can be set by
+              ROS Parameter 'openni2_num_sensors_expected'.
+    @note: Technically this can be static check, but because of the
+           need for connecting to ROS Param server, this needs
+           to be online check.
     """
     errors = []
     num_sensors_expected = rospy.get_param("openni2_num_sensors_expected", 1)
@@ -95,10 +98,10 @@ app_warnings_static = [
 ]
 
 app_errors_online = [
+  (sensor_notfound, "Different number of openni2 sensors found."),
 ]
 
 app_errors_static = [
-  (sensor_notfound, "Different number of openni2 sensors found."),
 ]
 
 

@@ -79,10 +79,11 @@ def sensor_notfound(ctx):
     """
     errors = []
     num_sensors_expected = rospy.get_param("openni2_num_sensors_expected", 1)
-    # TODO: The set of manufacture id and prod id is specific to Asus Xtion.
-    #       There may be other openni2-based devices.
+    # The set of manufacture id and prod id. Default: Asus Xtion.
+    id_manufacturer = rospy.get_param("id_manufacturer", "1d27")
+    id_product = rospy.get_param("id_product", "0601")
     devices = _device_notfound_subproc(
-        id_manufacturer="1d27", id_product="0601")
+        id_manufacturer=id_manufacturer, id_product=id_product)
     num_sensors = len(devices)
     if num_sensors != num_sensors_expected:
         errors.append("{} openni2 sensors found (expected: {}).".format(

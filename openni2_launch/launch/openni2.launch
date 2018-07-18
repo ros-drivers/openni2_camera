@@ -12,6 +12,11 @@
             '#1'  : the first device found
             '2@X' : the Xth device on USB bus 2"/>
 
+  <arg name="id_manufacturer" default="1d27"
+       doc="Vendor ID of the sensor (maintained at http://www.linux-usb.org/usb-ids.html). Default: ASUS."/>
+  <arg name="id_product" default="0601"
+       doc="Product ID of the sensor. Default: Xtion."/>
+
   <arg name="rgb_camera_info_url"   default=""
        doc="By default, calibrations are stored to file://${ROS_HOME}/camera_info/${NAME}.yaml,
             where ${NAME} is of the form '[rgb|depth]_[serial#]', e.g. 'depth_B00367707227042B'.
@@ -72,6 +77,8 @@
 	     file="$(find openni2_launch)/launch/includes/device.launch.xml">
       <arg name="manager"                         value="$(arg manager)" />
       <arg name="device_id"                       value="$(arg device_id)" />
+      <arg name="id_manufacturer"                 value="$(arg id_manufacturer)" />
+      <arg name="id_product"                      value="$(arg id_product)" />
       <arg name="rgb_frame_id"                    value="$(arg rgb_frame_id)" />
       <arg name="depth_frame_id"                  value="$(arg depth_frame_id)" />
       <arg name="rgb_camera_info_url"             value="$(arg rgb_camera_info_url)" />

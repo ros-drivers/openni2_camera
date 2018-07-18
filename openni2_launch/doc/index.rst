@@ -45,6 +45,78 @@ E.g. When 2 openni2-based cameras are connected and `lsusb -t` returns the follo
 
 TBD
 
+Support tools
+==========
+
+Check the number of devices plugged in by `roswtf plugin <http://wiki.ros.org/roswtf/Plugins>`_.
+Change the number of devices to expect by setting the number in ROS parameter "``openni2_num_sensors_expected``".
+
+Example: ::
+
+  $ lsusb
+  :
+  Bus 005 Device 002: ID 1d27:0601 ASUS 
+  Bus 003 Device 002: ID 1d27:0601 ASUS 
+  
+  term-1$ roscore
+  
+  term-2$ roswtf
+  
+  Loaded plugin tf.tfwtf
+  Loaded plugin openni2_launch.wtf_plugin
+  No package or stack in context
+  ================================================================================
+  Static checks summary:
+  
+  Found 1 error(s).
+  
+  ERROR Different number of openni2 sensors found.
+   * 2 openni2 sensors found (expected: 1).
+  
+  ================================================================================
+  Beginning tests of your ROS graph. These may take awhile...
+  analyzing graph...
+  ... done analyzing graph
+  running graph rules...
+  ... done running graph rules
+  
+  Online checks summary:
+  
+  Found 1 warning(s).
+  Warnings are things that may be just fine, but are sometimes at fault
+  
+  WARNING The following node subscriptions are unconnected:
+   * /rosout:
+     * /rosout
+
+After setting `openni2_num_sensors_expected` param with 2, no error occurs. ::
+
+  term-2$ rosparam set openni2_num_sensors_expected 2
+  
+  $ roswtf                                                                                                                                                                    
+  Loaded plugin tf.tfwtf
+  Loaded plugin openni2_launch.wtf_plugin
+  No package or stack in context
+  ================================================================================
+  Static checks summary:
+  
+  No errors or warnings
+  ================================================================================
+  Beginning tests of your ROS graph. These may take awhile...
+  analyzing graph...
+  ... done analyzing graph
+  running graph rules...
+  ... done running graph rules
+
+  Online checks summary:
+  
+  Found 1 warning(s).
+  Warnings are things that may be just fine, but are sometimes at fault
+  
+  WARNING The following node subscriptions are unconnected:
+   * /rosout:
+     * /rosout
+
 Indices and tables
 ==================
 

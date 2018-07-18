@@ -6,6 +6,8 @@
 
   <!-- Driver parameters -->
   <arg name="device_id" />
+  <arg name="id_manufacturer" />
+  <arg name="id_product" />
   <arg name="rgb_frame_id" />
   <arg name="depth_frame_id" />
   <arg name="rgb_camera_info_url" />
@@ -34,6 +36,8 @@
         args="load openni2_camera/OpenNI2DriverNodelet $(arg manager) $(arg bond)"
 	    respawn="$(arg respawn)">
     <param name="device_id" type="str" value="$(arg device_id)" />
+    <param name="id_manufacturer" type="str" value="$(arg id_manufacturer)" />
+    <param name="id_product" type="str" value="$(arg id_product)" />
     <param name="rgb_camera_info_url"   value="$(arg rgb_camera_info_url)" />
     <param name="depth_camera_info_url" value="$(arg depth_camera_info_url)" />
     <param name="rgb_frame_id"   value="$(arg rgb_frame_id)" />

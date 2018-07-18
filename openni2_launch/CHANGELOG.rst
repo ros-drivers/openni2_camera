@@ -2,8 +2,8 @@
 Changelog for package openni2_launch
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.4.0 (2018-07-17)
+------------------
 * Add a simple roswtf plugin. `#80 <https://github.com/ros-drivers/openni2_camera/issues/80>`_
 * Contributors: Isaac I.Y. Saito, PlusOne Robotics Inc.
 

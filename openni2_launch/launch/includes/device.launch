@@ -9,8 +9,10 @@
   <arg name="depth_camera_info_url" />
   <arg name="depth_registration" default="true" />
   <arg name="color_depth_synchronization" default="false" />
-  <arg name="auto_exposure" default="true" />
-  <arg name="auto_white_balance" default="true" />
+  <arg name="auto_exposure" default="true"
+          doc="This arg is not used. Preserved only for backward compatibility." />
+  <arg name="auto_white_balance" default="true"
+          doc="This arg is not used. Preserved only for backward compatibility."  />
   <arg name="respawn" default="false" />
   <arg name="rgb"              default="rgb" />
   <arg name="ir"               default="ir" />

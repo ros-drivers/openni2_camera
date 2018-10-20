@@ -28,8 +28,10 @@
 
   <!-- Driver parameters -->
   <arg name="color_depth_synchronization"     default="false" />
-  <arg name="auto_exposure"                   default="true" />
-  <arg name="auto_white_balance"              default="true" />
+  <arg name="auto_exposure"                   default="true"
+          doc="This arg is not used. Preserved only for backward compatibility." />
+  <arg name="auto_white_balance"              default="true"
+          doc="This arg is not used. Preserved only for backward compatibility." />
 
   <!-- Arguments for remapping all device namespaces -->
   <arg name="rgb"              default="rgb" />
@@ -89,8 +91,6 @@
       <arg name="respawn"                         value="$(arg respawn)" />
       <arg name="depth_registration"              value="$(arg depth_registration)" />
       <arg name="color_depth_synchronization"     value="$(arg color_depth_synchronization)" />
-      <arg name="auto_exposure"                   value="$(arg auto_exposure)" />
-      <arg name="auto_white_balance"              value="$(arg auto_white_balance)" />
     </include>
 
     <!-- Load standard constellation of processing nodelets -->

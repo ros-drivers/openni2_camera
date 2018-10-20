@@ -24,8 +24,8 @@ env:
     - ROS_DISTRO="lunar"   ROS_REPO=ros
     - ROS_DISTRO="lunar"   ROS_REPO=ros-shadow-fixed
     - ROS_DISTRO="lunar"   PRERELEASE=true
-    - ROS_DISTRO="melodic"   ROS_REPO=ros ABICHECK_URL='github:ros-drivers/openni2_camera#indigo-devel'
-    - ROS_DISTRO="melodic"   ROS_REPO=ros-shadow-fixed ABICHECK_URL='github:ros-drivers/openni2_camera#indigo-devel'
+    - ROS_DISTRO="melodic"   ROS_REPO=ros ABICHECK_URL='github:ros-drivers/openni2_camera#indigo-devel' ABICHECK_MERGE=auto
+    - ROS_DISTRO="melodic"   ROS_REPO=ros-shadow-fixed ABICHECK_URL='github:ros-drivers/openni2_camera#indigo-devel' ABICHECK_MERGE=auto
     - ROS_DISTRO="melodic"   PRERELEASE=true
 matrix:
   allow_failures:

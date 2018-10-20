@@ -12,6 +12,7 @@
 
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>python-catkin-pkg</build_depend>
+  <build_depend>roslaunch</build_depend>  <!-- For launch check -->
   <run_depend>rgbd_launch</run_depend>
   <run_depend>depth_image_proc</run_depend>
   <run_depend>image_proc</run_depend>

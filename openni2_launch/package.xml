@@ -21,6 +21,7 @@
   <run_depend>rospy</run_depend>
   <run_depend>roswtf</run_depend>  
   <run_depend>tf</run_depend>
+  <run_depend>usbutils</run_depend>
   <export>
     <rosdoc config="rosdoc.yaml"/>  
     <roswtf plugin="openni2_launch.wtf_plugin" />    

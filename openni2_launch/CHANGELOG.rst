@@ -2,8 +2,8 @@
 Changelog for package openni2_launch
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.4.2 (2018-12-01)
+------------------
 * Fix roswtf plugin dependency `#92 <https://github.com/ros-drivers/openni2_camera/issues/92>`_
 * Contributors: Isaac I.Y. Saito
 

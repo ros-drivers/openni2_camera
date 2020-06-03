@@ -2,8 +2,8 @@
 Changelog for package openni2_launch
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.4.2 (2020-06-03)
+------------------
 * update package.xml for noetic support
 * Contributors: Michael Ferguson
 

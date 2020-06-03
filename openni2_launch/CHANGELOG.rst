@@ -2,6 +2,11 @@
 Changelog for package openni2_launch
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.4.2 (2020-06-03)
+------------------
+* update package.xml for noetic support
+* Contributors: Michael Ferguson
+
 0.4.2 (2018-12-01)
 ------------------
 * Fix roswtf plugin dependency `#92 <https://github.com/ros-drivers/openni2_camera/issues/92>`_

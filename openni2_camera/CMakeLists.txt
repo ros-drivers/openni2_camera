@@ -1,94 +1,128 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.5)
 project(openni2_camera)
 
-find_package(catkin REQUIRED camera_info_manager dynamic_reconfigure image_transport  nodelet sensor_msgs roscpp message_generation)
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 14)
+endif()
 
 find_package(Boost REQUIRED COMPONENTS system thread)
+find_package(ament_cmake REQUIRED)
+find_package(builtin_interfaces REQUIRED)
+find_package(camera_info_manager REQUIRED)
+find_package(image_transport REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(rclcpp_components REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
 
 find_package(PkgConfig)
-
 pkg_check_modules(PC_OPENNI2 libopenni2)
 if (NOT PC_OPENNI2_FOUND)
   pkg_check_modules(PC_OPENNI2 REQUIRED openni2)
 endif()
 
-generate_dynamic_reconfigure_options(cfg/OpenNI2.cfg)
-add_service_files(FILES
-  GetSerial.srv)
-generate_messages()
-
-catkin_package(
-  INCLUDE_DIRS include
-  LIBRARIES openni2_wrapper
-  CATKIN_DEPENDS camera_info_manager dynamic_reconfigure image_transport nodelet sensor_msgs roscpp message_runtime
-  DEPENDS libopenni2
+rosidl_generate_interfaces(${PROJECT_NAME}
+  "srv/GetSerial.srv"
+  DEPENDENCIES builtin_interfaces
 )
 
-include_directories(include 
-                    ${catkin_INCLUDE_DIRS} 
-                    ${Boost_INCLUDE_DIRS}
-                    ${PC_OPENNI2_INCLUDE_DIRS}
-                    )
+include_directories(
+  include
+  ${Boost_INCLUDE_DIRS}
+  ${PC_OPENNI2_INCLUDE_DIRS}
+)
 
 link_directories(${PC_OPENNI2_LIBRARY_DIRS})
 
-add_library(openni2_wrapper
-   src/openni2_convert.cpp
-   src/openni2_device.cpp 
-   src/openni2_device_info.cpp 
-   src/openni2_timer_filter.cpp 
-   src/openni2_frame_listener.cpp
-   src/openni2_device_manager.cpp
-   src/openni2_exception.cpp
-   src/openni2_video_mode.cpp
+add_library(openni2_wrapper SHARED
+  src/openni2_convert.cpp
+  src/openni2_device.cpp
+  src/openni2_device_info.cpp
+  src/openni2_timer_filter.cpp
+  src/openni2_frame_listener.cpp
+  src/openni2_device_manager.cpp
+  src/openni2_exception.cpp
+  src/openni2_video_mode.cpp
 )
-target_link_libraries(openni2_wrapper ${catkin_LIBRARIES} ${PC_OPENNI2_LIBRARIES} ${Boost_LIBRARIES} )
-
-add_executable(test_wrapper test/test_wrapper.cpp )
-target_link_libraries(test_wrapper openni2_wrapper ${Boost_LIBRARIES})
-
-add_library(openni2_driver_lib
-   src/openni2_driver.cpp
+target_link_libraries(openni2_wrapper
+  ${Boost_LIBRARIES}
+  ${PC_OPENNI2_LIBRARIES}
 )
-target_link_libraries(openni2_driver_lib openni2_wrapper ${catkin_LIBRARIES} ${Boost_LIBRARIES} )
-add_dependencies(openni2_driver_lib ${PROJECT_NAME}_gencfg ${PROJECT_NAME}_generate_messages_cpp)
-
-add_library(openni2_camera_nodelet
-   ros/openni2_camera_nodelet.cpp
+ament_target_dependencies(openni2_wrapper
+  builtin_interfaces
+  camera_info_manager
+  image_transport
+  sensor_msgs
+  rclcpp
+  rclcpp_components
+  rosidl_default_runtime
 )
-target_link_libraries(openni2_camera_nodelet openni2_driver_lib ${catkin_LIBRARIES} ${Boost_LIBRARIES} )
-add_dependencies(openni2_camera_nodelet ${PROJECT_NAME}_gencfg)
 
-add_executable(openni2_camera_node
-   ros/openni2_camera_node.cpp
+#add_executable(test_wrapper test/test_wrapper.cpp)
+#target_link_libraries(test_wrapper openni2_wrapper ${Boost_LIBRARIES})
+
+add_library(openni2_camera_lib SHARED
+  src/openni2_driver.cpp
 )
-target_link_libraries(openni2_camera_node openni2_driver_lib ${catkin_LIBRARIES} ${Boost_LIBRARIES} )
-add_dependencies(openni2_camera_node ${PROJECT_NAME}_gencfg ${PROJECT_NAME}_generate_messages_cpp)
+target_link_libraries(openni2_camera_lib
+  openni2_wrapper
+  ${Boost_LIBRARIE}
+)
+ament_target_dependencies(openni2_camera_lib
+  camera_info_manager
+  image_transport
+  sensor_msgs
+  rclcpp
+)
+rosidl_get_typesupport_target(cpp_typesupport_target
+  ${PROJECT_NAME} "rosidl_typesupport_cpp")
+target_link_libraries(openni2_camera_lib "${cpp_typesupport_target}")
+
+rclcpp_components_register_node(openni2_camera_lib
+  PLUGIN "openni2_wrapper::OpenNI2Driver"
+  EXECUTABLE openni2_camera_driver
+)
 
 add_executable(list_devices
    src/list_devices.cpp
 )
-target_link_libraries(list_devices openni2_wrapper)
+target_link_libraries(list_devices
+  openni2_wrapper
+)
 
 if (UNIX AND NOT APPLE)
   add_executable(usb_reset src/usb_reset.c)
   set(ADDITIONAL_EXECUTABLES "usb_reset")
 endif()
 
-install(TARGETS openni2_wrapper openni2_camera_nodelet openni2_camera_node list_devices openni2_driver_lib ${ADDITIONAL_EXECUTABLES}
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-  )
-
-install(DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+install(
+  TARGETS
+    list_devices
+    openni2_camera_lib
+    openni2_wrapper
+    ${ADDITIONAL_EXECUTABLES}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
-# add xml file
-install(FILES openni2_nodelets.xml
-        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+install(
+  DIRECTORY include/
+  DESTINATION include
 )
 
+install(
+  DIRECTORY launch
+  DESTINATION share/${PROJECT_NAME}/
+)
 
+ament_export_include_directories(include)
+ament_export_libraries(openni2_wrapper)
+ament_export_dependencies(
+  camera_info_manager
+  image_transport
+  sensor_msgs
+  rclcpp
+)
+ament_package()
 

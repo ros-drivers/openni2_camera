@@ -32,8 +32,8 @@
 #include "openni2_camera/openni2_driver.h"
 #include "openni2_camera/openni2_exception.h"
 
-#include <sensor_msgs/image_encodings.h>
-#include <sensor_msgs/distortion_models.h>
+#include <sensor_msgs/image_encodings.hpp>
+#include <sensor_msgs/distortion_models.hpp>
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/thread/thread.hpp>
@@ -41,11 +41,9 @@
 namespace openni2_wrapper
 {
 
-OpenNI2Driver::OpenNI2Driver(ros::NodeHandle& n, ros::NodeHandle& pnh) :
-    nh_(n),
-    pnh_(pnh),
+OpenNI2Driver::OpenNI2Driver(const rclcpp::NodeOptions & node_options) :
+    Node("openni2_camera", node_options),
     device_manager_(OpenNI2DeviceManager::getSingelton()),
-    config_init_(false),
     data_skip_ir_counter_(0),
     data_skip_color_counter_(0),
     data_skip_depth_counter_ (0),
@@ -56,52 +54,103 @@ OpenNI2Driver::OpenNI2Driver(ros::NodeHandle& n, ros::NodeHandle& pnh) :
     enable_reconnect_(false),
     serialnumber_as_name_(false)
 {
+  // Declare parameters
+  depth_ir_offset_x_ = declare_parameter<double>("depth_ir_offset_x", 5.0);
+  depth_ir_offset_y_ = declare_parameter<double>("depth_ir_offset_y", 4.0);
+
+  z_offset_mm_ = declare_parameter<int>("z_offset_mm", 0);
+  z_scaling_ = declare_parameter<double>("z_scaling", 1.0);
+
+  ir_time_offset_ = declare_parameter<double>("ir_time_offset", -0.033);
+  color_time_offset_ = declare_parameter<double>("color_time_offset", -0.033);
+  depth_time_offset_ = declare_parameter<double>("depth_time_offset", -0.033);
+
+  depth_registration_ = declare_parameter<bool>("depth_registration", true);
+  color_depth_synchronization_ = declare_parameter<bool>("color_depth_synchronization", false);
+  auto_exposure_ = declare_parameter<bool>("auto_exposure", true);
+  auto_white_balance_ = declare_parameter<bool>("auto_white_balance", true);
+  use_device_time_ = declare_parameter<bool>("use_device_time", true);
+  exposure_ = declare_parameter<int>("exposure", 0);
+  data_skip_ = declare_parameter<int>("data_skip", 0) + 1;
+  enable_reconnect_ = declare_parameter<bool>("enable_reconnect", true);
+
+  ir_frame_id_ = declare_parameter<std::string>("ir_frame_id", "openni_ir_optical_frame");
+  color_frame_id_ = declare_parameter<std::string>("rgb_frame_id", "openni_rgb_optical_frame");
+  depth_frame_id_ = declare_parameter<std::string>("depth_frame_id", "openni_depth_optical_frame");
+
+  color_info_url_ = declare_parameter<std::string>("rgb_camera_info_url", "");
+  ir_info_url_ = declare_parameter<std::string>("depth_camera_info_url", "");
 
   genVideoModeTableMap();
-
-  readConfigFromParameterServer();
-
-  initDevice();
-
-  // Initialize dynamic reconfigure
-  reconfigure_server_.reset(new ReconfigureServer(pnh_));
-  reconfigure_server_->setCallback(boost::bind(&OpenNI2Driver::configCb, this, _1, _2));
-
-  while (!config_init_)
+  std::string mode = declare_parameter<std::string>("ir_mode", "VGA_30Hz");
+  if (!lookupVideoMode(mode, ir_video_mode_))
   {
-    ROS_DEBUG("Waiting for dynamic reconfigure configuration.");
-    boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+    RCLCPP_ERROR(this->get_logger(), "Undefined IR video mode");
   }
-  ROS_DEBUG("Dynamic reconfigure configuration received.");
 
-  advertiseROSTopics();
-
-  if( enable_reconnect_ )
+  mode = declare_parameter<std::string>("color_mode", "VGA_30Hz");
+  if (!lookupVideoMode(mode, color_video_mode_))
   {
-    ROS_WARN_STREAM("Reconnect has been enabled, only one camera "
-                    << "should be plugged into each bus");
-    timer_ = nh_.createTimer(ros::Duration(1.0), &OpenNI2Driver::monitorConnection, this);
+    RCLCPP_ERROR(this->get_logger(), "Undefined color video mode");
+  }
+
+  mode = declare_parameter<std::string>("depth_mode", "VGA_30Hz");
+  if (!lookupVideoMode(mode, depth_video_mode_))
+  {
+    RCLCPP_ERROR(this->get_logger(), "Undefined color video mode");
+  }
+
+  ir_video_mode_.pixel_format_ = PIXEL_FORMAT_GRAY16;
+  color_video_mode_.pixel_format_ = PIXEL_FORMAT_RGB888;
+  depth_video_mode_.pixel_format_ = PIXEL_FORMAT_DEPTH_1_MM;
+
+  device_id_ = declare_parameter<std::string>("device_id", "#1");
+  if (device_id_ == "#1")
+  {
+    RCLCPP_WARN(this->get_logger(), "device_id is not set! Using first device.");
+  }
+
+  if (enable_reconnect_)
+  {
+    RCLCPP_WARN_STREAM(this->get_logger(), "Reconnect has been enabled, only one camera "
+                                            << "should be plugged into each bus");
   }
   else
   {
-    ROS_WARN_STREAM("Reconnect has been disabled");
+    RCLCPP_WARN_STREAM(this->get_logger(), "Reconnect has been disabled");
   }
+
+  initialized_ = false;
+  timer_ = this->create_wall_timer(std::chrono::seconds(1),
+                                   std::bind(&OpenNI2Driver::periodic, this));
+}
+
+void OpenNI2Driver::periodic()
+{
+  if (!initialized_)
+  {
+    initDevice();
+    advertiseROSTopics();
+    applyConfigToOpenNIDevice();
+
+    // Register parameter callback
+    this->add_on_set_parameters_callback(std::bind(&OpenNI2Driver::paramCb, this, std::placeholders::_1));
+    initialized_ = true;
+  }
+
+  // TODO: check subscriber counts, enable cameras
+  colorConnectCb();
+  depthConnectCb();
+  irConnectCb();
+
+  if (enable_reconnect_)
+    monitorConnection();
 }
 
 void OpenNI2Driver::advertiseROSTopics()
 {
-
-  // Allow remapping namespaces rgb, ir, depth, depth_registered
-  ros::NodeHandle color_nh(nh_, "rgb");
-  image_transport::ImageTransport color_it(color_nh);
-  ros::NodeHandle ir_nh(nh_, "ir");
-  image_transport::ImageTransport ir_it(ir_nh);
-  ros::NodeHandle depth_nh(nh_, "depth");
-  image_transport::ImageTransport depth_it(depth_nh);
-  ros::NodeHandle depth_raw_nh(nh_, "depth");
-  image_transport::ImageTransport depth_raw_it(depth_raw_nh);
-  ros::NodeHandle projector_nh(nh_, "projector");
   // Advertise all published topics
+  image_transport::ImageTransport it(this->shared_from_this());
 
   // Prevent connection callbacks from executing until we've set all the publishers. Otherwise
   // connectCb() can fire while we're advertising (say) "depth/image_raw", but before we actually
@@ -112,34 +161,22 @@ void OpenNI2Driver::advertiseROSTopics()
   // Asus Xtion PRO does not have an RGB camera
   if (device_->hasColorSensor())
   {
-    image_transport::SubscriberStatusCallback itssc = boost::bind(&OpenNI2Driver::colorConnectCb, this);
-    ros::SubscriberStatusCallback rssc = boost::bind(&OpenNI2Driver::colorConnectCb, this);
-    pub_color_ = color_it.advertiseCamera("image", 1, itssc, itssc, rssc, rssc);
+    pub_color_ = it.advertiseCamera("rgb/image_raw", 1);
   }
 
   if (device_->hasIRSensor())
   {
-    image_transport::SubscriberStatusCallback itssc = boost::bind(&OpenNI2Driver::irConnectCb, this);
-    ros::SubscriberStatusCallback rssc = boost::bind(&OpenNI2Driver::irConnectCb, this);
-    pub_ir_ = ir_it.advertiseCamera("image", 1, itssc, itssc, rssc, rssc);
+    pub_ir_ = it.advertiseCamera("ir/image", 1);
   }
 
   if (device_->hasDepthSensor())
   {
-    image_transport::SubscriberStatusCallback itssc = boost::bind(&OpenNI2Driver::depthConnectCb, this);
-    ros::SubscriberStatusCallback rssc = boost::bind(&OpenNI2Driver::depthConnectCb, this);
-    pub_depth_raw_ = depth_it.advertiseCamera("image_raw", 1, itssc, itssc, rssc, rssc);
-    pub_depth_ = depth_raw_it.advertiseCamera("image", 1, itssc, itssc, rssc, rssc);
-    pub_projector_info_ = projector_nh.advertise<sensor_msgs::CameraInfo>("camera_info", 1, rssc, rssc);
+    pub_depth_raw_ = it.advertiseCamera("depth/image_raw", 1);
+    pub_depth_ = it.advertiseCamera("depth/image", 1);
+    pub_projector_info_ = this->create_publisher<sensor_msgs::msg::CameraInfo>("projector/camera_info", 1);
   }
 
   ////////// CAMERA INFO MANAGER
-
-  // Pixel offset between depth and IR images.
-  // By default assume offset of (5,4) from 9x7 correlation window.
-  // NOTE: These are now (temporarily?) dynamically reconfigurable, to allow tweaking.
-  //param_nh.param("depth_ir_offset_x", depth_ir_offset_x_, 5.0);
-  //param_nh.param("depth_ir_offset_y", depth_ir_offset_y_, 4.0);
 
   // The camera names are set to [rgb|depth]_[serial#], e.g. depth_B00367707227042B.
   // camera_info_manager substitutes this for ${NAME} in the URL.
@@ -154,71 +191,28 @@ void OpenNI2Driver::advertiseROSTopics()
   ir_name  = "depth_" + serial_number;
 
   // Load the saved calibrations, if they exist
-  color_info_manager_ = boost::make_shared<camera_info_manager::CameraInfoManager>(color_nh, color_name, color_info_url_);
-  ir_info_manager_  = boost::make_shared<camera_info_manager::CameraInfoManager>(ir_nh,  ir_name,  ir_info_url_);
+  color_info_manager_ = std::make_shared<camera_info_manager::CameraInfoManager>(this, color_name, color_info_url_);
+  ir_info_manager_  = std::make_shared<camera_info_manager::CameraInfoManager>(this,  ir_name,  ir_info_url_);
 
-  get_serial_server = nh_.advertiseService("get_serial", &OpenNI2Driver::getSerialCb,this);
-
+  get_serial_server = this->create_service<openni2_camera::srv::GetSerial>(
+    "get_serial",
+    std::bind(&OpenNI2Driver::getSerialCb, this, std::placeholders::_1, std::placeholders::_2)
+  );
 }
 
-bool OpenNI2Driver::getSerialCb(openni2_camera::GetSerialRequest& req, openni2_camera::GetSerialResponse& res) {
-  res.serial = device_manager_->getSerial(device_->getUri());
-  return true;
-}
-
-void OpenNI2Driver::configCb(Config &config, uint32_t level)
+void OpenNI2Driver::getSerialCb(const std::shared_ptr<openni2_camera::srv::GetSerial::Request> request,
+                                std::shared_ptr<openni2_camera::srv::GetSerial::Response> response)
 {
-  bool stream_reset = false;
+  response->serial = device_manager_->getSerial(device_->getUri());
+}
 
-  depth_ir_offset_x_ = config.depth_ir_offset_x;
-  depth_ir_offset_y_ = config.depth_ir_offset_y;
-  z_offset_mm_ = config.z_offset_mm;
-  z_scaling_ = config.z_scaling;
+rcl_interfaces::msg::SetParametersResult OpenNI2Driver::paramCb(
+  const std::vector<rclcpp::Parameter> parameters)
+{
+  auto result = rcl_interfaces::msg::SetParametersResult();
 
-  ir_time_offset_ = ros::Duration(config.ir_time_offset);
-  color_time_offset_ = ros::Duration(config.color_time_offset);
-  depth_time_offset_ = ros::Duration(config.depth_time_offset);
-
-  if (lookupVideoModeFromDynConfig(config.ir_mode, ir_video_mode_)<0)
-  {
-    ROS_ERROR("Undefined IR video mode received from dynamic reconfigure");
-    exit(-1);
-  }
-
-  if (lookupVideoModeFromDynConfig(config.color_mode, color_video_mode_)<0)
-  {
-    ROS_ERROR("Undefined color video mode received from dynamic reconfigure");
-    exit(-1);
-  }
-
-  if (lookupVideoModeFromDynConfig(config.depth_mode, depth_video_mode_)<0)
-  {
-    ROS_ERROR("Undefined depth video mode received from dynamic reconfigure");
-    exit(-1);
-  }
-
-  // assign pixel format
-
-  ir_video_mode_.pixel_format_ = PIXEL_FORMAT_GRAY16;
-  color_video_mode_.pixel_format_ = PIXEL_FORMAT_RGB888;
-  depth_video_mode_.pixel_format_ = PIXEL_FORMAT_DEPTH_1_MM;
-
-  color_depth_synchronization_ = config.color_depth_synchronization;
-  depth_registration_ = config.depth_registration;
-
-  auto_exposure_ = config.auto_exposure;
-  auto_white_balance_ = config.auto_white_balance;
-  exposure_ = config.exposure;
-
-  use_device_time_ = config.use_device_time;
-
-  data_skip_ = config.data_skip+1;
-
-  applyConfigToOpenNIDevice();
-
-  config_init_ = true;
-
-  old_config_ = config;
+  RCLCPP_WARN(this->get_logger(), "parameter change callback");
+  return result;
 }
 
 void OpenNI2Driver::setIRVideoMode(const OpenNI2VideoMode& ir_video_mode)
@@ -229,11 +223,10 @@ void OpenNI2Driver::setIRVideoMode(const OpenNI2VideoMode& ir_video_mode)
     {
       device_->setIRVideoMode(ir_video_mode);
     }
-
   }
   else
   {
-    ROS_ERROR_STREAM("Unsupported IR video mode - " << ir_video_mode);
+    RCLCPP_ERROR_STREAM(this->get_logger(), "Unsupported IR video mode - " << ir_video_mode);
   }
 }
 void OpenNI2Driver::setColorVideoMode(const OpenNI2VideoMode& color_video_mode)
@@ -247,7 +240,7 @@ void OpenNI2Driver::setColorVideoMode(const OpenNI2VideoMode& color_video_mode)
   }
   else
   {
-    ROS_ERROR_STREAM("Unsupported color video mode - " << color_video_mode);
+    RCLCPP_ERROR_STREAM(this->get_logger(), "Unsupported color video mode - " << color_video_mode);
   }
 }
 void OpenNI2Driver::setDepthVideoMode(const OpenNI2VideoMode& depth_video_mode)
@@ -261,13 +254,12 @@ void OpenNI2Driver::setDepthVideoMode(const OpenNI2VideoMode& depth_video_mode)
   }
   else
   {
-    ROS_ERROR_STREAM("Unsupported depth video mode - " << depth_video_mode);
+    RCLCPP_ERROR_STREAM(this->get_logger(), "Unsupported depth video mode - " << depth_video_mode);
   }
 }
 
 void OpenNI2Driver::applyConfigToOpenNIDevice()
 {
-
   data_skip_ir_counter_ = 0;
   data_skip_color_counter_= 0;
   data_skip_depth_counter_ = 0;
@@ -280,52 +272,57 @@ void OpenNI2Driver::applyConfigToOpenNIDevice()
   {
     try
     {
-      if (!config_init_ || (old_config_.depth_registration != depth_registration_))
+      //if (!config_init_ || (old_config_.depth_registration != depth_registration_))
+      if (depth_registration_)
+      {
         device_->setImageRegistrationMode(depth_registration_);
+      }
     }
     catch (const OpenNI2Exception& exception)
     {
-      ROS_ERROR("Could not set image registration. Reason: %s", exception.what());
+      RCLCPP_ERROR(this->get_logger(), "Could not set image registration. Reason: %s", exception.what());
     }
   }
 
   try
   {
-    if (!config_init_ || (old_config_.color_depth_synchronization != color_depth_synchronization_))
+    //if (!config_init_ || (old_config_.color_depth_synchronization != color_depth_synchronization_))
+    if (color_depth_synchronization_)
       device_->setDepthColorSync(color_depth_synchronization_);
   }
   catch (const OpenNI2Exception& exception)
   {
-    ROS_ERROR("Could not set color depth synchronization. Reason: %s", exception.what());
+    RCLCPP_ERROR(this->get_logger(), "Could not set color depth synchronization. Reason: %s", exception.what());
   }
 
   try
   {
-    if (!config_init_ || (old_config_.auto_exposure != auto_exposure_))
+    //if (!config_init_ || (old_config_.auto_exposure != auto_exposure_))
+    if (auto_exposure_)
       device_->setAutoExposure(auto_exposure_);
   }
   catch (const OpenNI2Exception& exception)
   {
-    ROS_ERROR("Could not set auto exposure. Reason: %s", exception.what());
+    RCLCPP_ERROR(this->get_logger(), "Could not set auto exposure. Reason: %s", exception.what());
   }
 
   try
   {
-    if (!config_init_ || (old_config_.auto_white_balance != auto_white_balance_))
+    //if (!config_init_ || (old_config_.auto_white_balance != auto_white_balance_))
+    if (auto_white_balance_)
       device_->setAutoWhiteBalance(auto_white_balance_);
   }
   catch (const OpenNI2Exception& exception)
   {
-    ROS_ERROR("Could not set auto white balance. Reason: %s", exception.what());
+    RCLCPP_ERROR(this->get_logger(), "Could not set auto white balance. Reason: %s", exception.what());
   }
-
 
   // Workaound for https://github.com/ros-drivers/openni2_camera/issues/51
   // This is only needed when any of the 3 setting change.  For simplicity
   // this check is always performed and exposure set.
   if( (!auto_exposure_ && !auto_white_balance_) && exposure_ != 0 )
   {
-    ROS_INFO_STREAM("Forcing exposure set, when auto exposure/white balance disabled");
+    RCLCPP_INFO_STREAM(this->get_logger(), "Forcing exposure set, when auto exposure/white balance disabled");
     forceSetExposure();
   }
   else
@@ -333,28 +330,26 @@ void OpenNI2Driver::applyConfigToOpenNIDevice()
     // Setting the exposure the old way, although this should not have an effect
     try
     {
-      if (!config_init_ || (old_config_.exposure != exposure_))
-        device_->setExposure(exposure_);
+      //if (!config_init_ || (old_config_.exposure != exposure_))
+      device_->setExposure(exposure_);
     }
     catch (const OpenNI2Exception& exception)
     {
-      ROS_ERROR("Could not set exposure. Reason: %s", exception.what());
+      RCLCPP_ERROR(this->get_logger(), "Could not set exposure. Reason: %s", exception.what());
     }
   }
 
   device_->setUseDeviceTimer(use_device_time_);
 }
 
-
-
 void OpenNI2Driver::forceSetExposure()
 {
   int current_exposure_ = device_->getExposure();
   try
   {
-    if( current_exposure_ == exposure_ )
+    if (current_exposure_ == exposure_)
     {
-      if( exposure_ < 254 )
+      if (exposure_ < 254)
       {
         device_->setExposure(exposure_ + 1);
       }
@@ -367,19 +362,20 @@ void OpenNI2Driver::forceSetExposure()
   }
   catch (const OpenNI2Exception& exception)
   {
-    ROS_ERROR("Could not set exposure. Reason: %s", exception.what());
+    RCLCPP_ERROR(this->get_logger(), "Could not set exposure. Reason: %s", exception.what());
   }
 }
 
 void OpenNI2Driver::colorConnectCb()
 {
-  if( !device_ )
+  if (!device_)
   {
-    ROS_WARN_STREAM("Callback in " << __FUNCTION__ <<  "failed due to null device");
+    RCLCPP_WARN_STREAM(this->get_logger(), "Callback in " << __FUNCTION__ <<  "failed due to null device");
     return;
   }
   boost::lock_guard<boost::mutex> lock(connect_mutex_);
 
+  // This does not appear to work
   color_subscribers_ = pub_color_.getNumSubscribers() > 0;
 
   if (color_subscribers_ && !device_->isColorStreamStarted())
@@ -387,29 +383,28 @@ void OpenNI2Driver::colorConnectCb()
     // Can't stream IR and RGB at the same time. Give RGB preference.
     if (device_->isIRStreamStarted())
     {
-      ROS_ERROR("Cannot stream RGB and IR at the same time. Streaming RGB only.");
-      ROS_INFO("Stopping IR stream.");
+      RCLCPP_ERROR(this->get_logger(), "Cannot stream RGB and IR at the same time. Streaming RGB only.");
+      RCLCPP_INFO(this->get_logger(), "Stopping IR stream.");
       device_->stopIRStream();
     }
 
     device_->setColorFrameCallback(boost::bind(&OpenNI2Driver::newColorFrameCallback, this, _1));
 
-    ROS_INFO("Starting color stream.");
+    RCLCPP_INFO(this->get_logger(), "Starting color stream.");
     device_->startColorStream();
 
     // Workaound for https://github.com/ros-drivers/openni2_camera/issues/51
-    if( exposure_ != 0 )
+    if (exposure_ != 0)
     {
-      ROS_INFO_STREAM("Exposure is set to " << exposure_ << ", forcing on color stream start");
+      RCLCPP_INFO_STREAM(this->get_logger(), "Exposure is set to " << exposure_ << ", forcing on color stream start");
         //delay for stream to start, before setting exposure
       boost::this_thread::sleep(boost::posix_time::milliseconds(100));
       forceSetExposure();
     }
-
   }
   else if (!color_subscribers_ && device_->isColorStreamStarted())
   {
-    ROS_INFO("Stopping color stream.");
+    RCLCPP_INFO(this->get_logger(), "Stopping color stream.");
     device_->stopColorStream();
 
     // Start IR if it's been blocked on RGB subscribers
@@ -418,7 +413,7 @@ void OpenNI2Driver::colorConnectCb()
     {
       device_->setIRFrameCallback(boost::bind(&OpenNI2Driver::newIRFrameCallback, this, _1));
 
-      ROS_INFO("Starting IR stream.");
+      RCLCPP_INFO(this->get_logger(), "Starting IR stream.");
       device_->startIRStream();
     }
   }
@@ -428,14 +423,15 @@ void OpenNI2Driver::depthConnectCb()
 {
   if( !device_ )
   {
-    ROS_WARN_STREAM("Callback in " << __FUNCTION__ <<  "failed due to null device");
+    RCLCPP_WARN_STREAM(this->get_logger(), "Callback in " << __FUNCTION__ <<  "failed due to null device");
     return;
   }
   boost::lock_guard<boost::mutex> lock(connect_mutex_);
 
+  // These does not appear to work
   depth_subscribers_ = pub_depth_.getNumSubscribers() > 0;
   depth_raw_subscribers_ = pub_depth_raw_.getNumSubscribers() > 0;
-  projector_info_subscribers_ = pub_projector_info_.getNumSubscribers() > 0;
+  projector_info_subscribers_ = pub_projector_info_->get_subscription_count() > 0;
 
   bool need_depth = depth_subscribers_ || depth_raw_subscribers_;
 
@@ -443,12 +439,12 @@ void OpenNI2Driver::depthConnectCb()
   {
     device_->setDepthFrameCallback(boost::bind(&OpenNI2Driver::newDepthFrameCallback, this, _1));
 
-    ROS_INFO("Starting depth stream.");
+    RCLCPP_INFO(this->get_logger(), "Starting depth stream.");
     device_->startDepthStream();
   }
   else if (!need_depth && device_->isDepthStreamStarted())
   {
-    ROS_INFO("Stopping depth stream.");
+    RCLCPP_INFO(this->get_logger(), "Stopping depth stream.");
     device_->stopDepthStream();
   }
 }
@@ -457,37 +453,46 @@ void OpenNI2Driver::irConnectCb()
 {
   if( !device_ )
   {
-    ROS_WARN_STREAM("Callback in " << __FUNCTION__ <<  "failed due to null device");
+    RCLCPP_WARN_STREAM(this->get_logger(), "Callback in " << __FUNCTION__ <<  "failed due to null device");
     return;
   }
   boost::lock_guard<boost::mutex> lock(connect_mutex_);
 
-  ir_subscribers_ = pub_ir_.getNumSubscribers() > 0;
+  // This does not appear to work
+  // ir_subscribers_ = pub_ir_.getNumSubscribers() > 0;
+  ir_subscribers_ = this->count_subscribers("ir/image") > 0 ||
+                    this->count_subscribers("ir/camera_info") > 0;
 
   if (ir_subscribers_ && !device_->isIRStreamStarted())
   {
     // Can't stream IR and RGB at the same time
     if (device_->isColorStreamStarted())
     {
-      ROS_ERROR("Cannot stream RGB and IR at the same time. Streaming RGB only.");
+      RCLCPP_ERROR(this->get_logger(), "Cannot stream RGB and IR at the same time. Streaming RGB only.");
     }
     else
     {
       device_->setIRFrameCallback(boost::bind(&OpenNI2Driver::newIRFrameCallback, this, _1));
 
-      ROS_INFO("Starting IR stream.");
+      RCLCPP_INFO(this->get_logger(), "Starting IR stream.");
       device_->startIRStream();
     }
   }
   else if (!ir_subscribers_ && device_->isIRStreamStarted())
   {
-    ROS_INFO("Stopping IR stream.");
+    RCLCPP_INFO(this->get_logger(), "Stopping IR stream.");
     device_->stopIRStream();
   }
 }
 
-void OpenNI2Driver::newIRFrameCallback(sensor_msgs::ImagePtr image)
+void OpenNI2Driver::newIRFrameCallback(sensor_msgs::msg::Image::SharedPtr image)
 {
+  if (!rclcpp::ok())
+  {
+    // Don't publish to invalid publishers
+    return;
+  }
+
   if ((++data_skip_ir_counter_)%data_skip_==0)
   {
     data_skip_ir_counter_ = 0;
@@ -495,15 +500,21 @@ void OpenNI2Driver::newIRFrameCallback(sensor_msgs::ImagePtr image)
     if (ir_subscribers_)
     {
       image->header.frame_id = ir_frame_id_;
-      image->header.stamp = image->header.stamp + ir_time_offset_;
+      image->header.stamp = rclcpp::Time(image->header.stamp) + rclcpp::Duration::from_seconds(ir_time_offset_);
 
       pub_ir_.publish(image, getIRCameraInfo(image->width, image->height, image->header.stamp));
     }
   }
 }
 
-void OpenNI2Driver::newColorFrameCallback(sensor_msgs::ImagePtr image)
+void OpenNI2Driver::newColorFrameCallback(sensor_msgs::msg::Image::SharedPtr image)
 {
+  if (!rclcpp::ok())
+  {
+    // Don't publish to invalid publishers
+    return;
+  }
+
   if ((++data_skip_color_counter_)%data_skip_==0)
   {
     data_skip_color_counter_ = 0;
@@ -511,15 +522,21 @@ void OpenNI2Driver::newColorFrameCallback(sensor_msgs::ImagePtr image)
     if (color_subscribers_)
     {
       image->header.frame_id = color_frame_id_;
-      image->header.stamp = image->header.stamp + color_time_offset_;
+      image->header.stamp = rclcpp::Time(image->header.stamp) + rclcpp::Duration::from_seconds(color_time_offset_);
 
       pub_color_.publish(image, getColorCameraInfo(image->width, image->height, image->header.stamp));
     }
   }
 }
 
-void OpenNI2Driver::newDepthFrameCallback(sensor_msgs::ImagePtr image)
+void OpenNI2Driver::newDepthFrameCallback(sensor_msgs::msg::Image::SharedPtr image)
 {
+  if (!rclcpp::ok())
+  {
+    // Don't publish to invalid publishers
+    return;
+  }
+
   if ((++data_skip_depth_counter_)%data_skip_==0)
   {
 
@@ -527,7 +544,7 @@ void OpenNI2Driver::newDepthFrameCallback(sensor_msgs::ImagePtr image)
 
     if (depth_raw_subscribers_||depth_subscribers_||projector_info_subscribers_)
     {
-      image->header.stamp = image->header.stamp + depth_time_offset_;
+      image->header.stamp = rclcpp::Time(image->header.stamp) + rclcpp::Duration::from_seconds(depth_time_offset_);
 
       if (z_offset_mm_ != 0)
       {
@@ -545,7 +562,7 @@ void OpenNI2Driver::newDepthFrameCallback(sensor_msgs::ImagePtr image)
                 data[i] = static_cast<uint16_t>(data[i] * z_scaling_);
       }
 
-      sensor_msgs::CameraInfoPtr cam_info;
+      sensor_msgs::msg::CameraInfo::SharedPtr cam_info;
 
       if (depth_registration_)
       {
@@ -564,66 +581,66 @@ void OpenNI2Driver::newDepthFrameCallback(sensor_msgs::ImagePtr image)
 
       if (depth_subscribers_ )
       {
-        sensor_msgs::ImageConstPtr floating_point_image = rawToFloatingPointConversion(image);
+        sensor_msgs::msg::Image::ConstSharedPtr floating_point_image = rawToFloatingPointConversion(image);
         pub_depth_.publish(floating_point_image, cam_info);
       }
 
       // Projector "info" probably only useful for working with disparity images
       if (projector_info_subscribers_)
       {
-        pub_projector_info_.publish(getProjectorCameraInfo(image->width, image->height, image->header.stamp));
+        pub_projector_info_->publish(*getProjectorCameraInfo(image->width, image->height, image->header.stamp));
       }
     }
   }
 }
 
 // Methods to get calibration parameters for the various cameras
-sensor_msgs::CameraInfoPtr OpenNI2Driver::getDefaultCameraInfo(int width, int height, double f) const
+sensor_msgs::msg::CameraInfo::SharedPtr OpenNI2Driver::getDefaultCameraInfo(int width, int height, double f) const
 {
-  sensor_msgs::CameraInfoPtr info = boost::make_shared<sensor_msgs::CameraInfo>();
+  sensor_msgs::msg::CameraInfo::SharedPtr info = std::make_shared<sensor_msgs::msg::CameraInfo>();
 
   info->width  = width;
   info->height = height;
 
   // No distortion
-  info->D.resize(5, 0.0);
+  info->d.resize(5, 0.0);
   info->distortion_model = sensor_msgs::distortion_models::PLUMB_BOB;
 
   // Simple camera matrix: square pixels (fx = fy), principal point at center
-  info->K.assign(0.0);
-  info->K[0] = info->K[4] = f;
-  info->K[2] = (width / 2) - 0.5;
+  info->k.fill(0.0);
+  info->k[0] = info->k[4] = f;
+  info->k[2] = (width / 2) - 0.5;
   // Aspect ratio for the camera center on Kinect (and other devices?) is 4/3
   // This formula keeps the principal point the same in VGA and SXGA modes
-  info->K[5] = (width * (3./8.)) - 0.5;
-  info->K[8] = 1.0;
+  info->k[5] = (width * (3./8.)) - 0.5;
+  info->k[8] = 1.0;
 
   // No separate rectified image plane, so R = I
-  info->R.assign(0.0);
-  info->R[0] = info->R[4] = info->R[8] = 1.0;
+  info->r.fill(0.0);
+  info->r[0] = info->r[4] = info->r[8] = 1.0;
 
   // Then P=K(I|0) = (K|0)
-  info->P.assign(0.0);
-  info->P[0]  = info->P[5] = f; // fx, fy
-  info->P[2]  = info->K[2];     // cx
-  info->P[6]  = info->K[5];     // cy
-  info->P[10] = 1.0;
+  info->p.fill(0.0);
+  info->p[0]  = info->p[5] = f; // fx, fy
+  info->p[2]  = info->k[2];     // cx
+  info->p[6]  = info->k[5];     // cy
+  info->p[10] = 1.0;
 
   return info;
 }
 
 /// @todo Use binning/ROI properly in publishing camera infos
-sensor_msgs::CameraInfoPtr OpenNI2Driver::getColorCameraInfo(int width, int height, ros::Time time) const
+sensor_msgs::msg::CameraInfo::SharedPtr OpenNI2Driver::getColorCameraInfo(int width, int height, rclcpp::Time time) const
 {
-  sensor_msgs::CameraInfoPtr info;
+  sensor_msgs::msg::CameraInfo::SharedPtr info;
 
   if (color_info_manager_->isCalibrated())
   {
-    info = boost::make_shared<sensor_msgs::CameraInfo>(color_info_manager_->getCameraInfo());
+    info = std::make_shared<sensor_msgs::msg::CameraInfo>(color_info_manager_->getCameraInfo());
     if ( info->width != width )
     {
       // Use uncalibrated values
-      ROS_WARN_ONCE("Image resolution doesn't match calibration of the RGB camera. Using default parameters.");
+      RCLCPP_WARN_ONCE(this->get_logger(), "Image resolution doesn't match calibration of the RGB camera. Using default parameters.");
       info = getDefaultCameraInfo(width, height, device_->getColorFocalLength(height));
     }
   }
@@ -641,17 +658,17 @@ sensor_msgs::CameraInfoPtr OpenNI2Driver::getColorCameraInfo(int width, int heig
 }
 
 
-sensor_msgs::CameraInfoPtr OpenNI2Driver::getIRCameraInfo(int width, int height, ros::Time time) const
+sensor_msgs::msg::CameraInfo::SharedPtr OpenNI2Driver::getIRCameraInfo(int width, int height, rclcpp::Time time) const
 {
-  sensor_msgs::CameraInfoPtr info;
+  sensor_msgs::msg::CameraInfo::SharedPtr info;
 
   if (ir_info_manager_->isCalibrated())
   {
-    info = boost::make_shared<sensor_msgs::CameraInfo>(ir_info_manager_->getCameraInfo());
+    info = std::make_shared<sensor_msgs::msg::CameraInfo>(ir_info_manager_->getCameraInfo());
     if ( info->width != width )
     {
       // Use uncalibrated values
-      ROS_WARN_ONCE("Image resolution doesn't match calibration of the IR camera. Using default parameters.");
+      RCLCPP_WARN_ONCE(this->get_logger(), "Image resolution doesn't match calibration of the IR camera. Using default parameters.");
       info = getDefaultCameraInfo(width, height, device_->getIRFocalLength(height));
     }
   }
@@ -668,7 +685,7 @@ sensor_msgs::CameraInfoPtr OpenNI2Driver::getIRCameraInfo(int width, int height,
   return info;
 }
 
-sensor_msgs::CameraInfoPtr OpenNI2Driver::getDepthCameraInfo(int width, int height, ros::Time time) const
+sensor_msgs::msg::CameraInfo::SharedPtr OpenNI2Driver::getDepthCameraInfo(int width, int height, rclcpp::Time time) const
 {
   // The depth image has essentially the same intrinsics as the IR image, BUT the
   // principal point is offset by half the size of the hardware correlation window
@@ -676,54 +693,28 @@ sensor_msgs::CameraInfoPtr OpenNI2Driver::getDepthCameraInfo(int width, int heig
 
   double scaling = (double)width / 640;
 
-  sensor_msgs::CameraInfoPtr info = getIRCameraInfo(width, height, time);
-  info->K[2] -= depth_ir_offset_x_*scaling; // cx
-  info->K[5] -= depth_ir_offset_y_*scaling; // cy
-  info->P[2] -= depth_ir_offset_x_*scaling; // cx
-  info->P[6] -= depth_ir_offset_y_*scaling; // cy
+  sensor_msgs::msg::CameraInfo::SharedPtr info = getIRCameraInfo(width, height, time);
+  info->k[2] -= depth_ir_offset_x_*scaling; // cx
+  info->k[5] -= depth_ir_offset_y_*scaling; // cy
+  info->p[2] -= depth_ir_offset_x_*scaling; // cx
+  info->p[6] -= depth_ir_offset_y_*scaling; // cy
 
   /// @todo Could put this in projector frame so as to encode the baseline in P[3]
   return info;
 }
 
-sensor_msgs::CameraInfoPtr OpenNI2Driver::getProjectorCameraInfo(int width, int height, ros::Time time) const
+sensor_msgs::msg::CameraInfo::SharedPtr OpenNI2Driver::getProjectorCameraInfo(int width, int height, rclcpp::Time time) const
 {
   // The projector info is simply the depth info with the baseline encoded in the P matrix.
   // It's only purpose is to be the "right" camera info to the depth camera's "left" for
   // processing disparity images.
-  sensor_msgs::CameraInfoPtr info = getDepthCameraInfo(width, height, time);
+  sensor_msgs::msg::CameraInfo::SharedPtr info = getDepthCameraInfo(width, height, time);
   // Tx = -baseline * fx
-  info->P[3] = -device_->getBaseline() * info->P[0];
+  info->p[3] = -device_->getBaseline() * info->p[0];
   return info;
 }
 
-void OpenNI2Driver::readConfigFromParameterServer()
-{
-  if (!pnh_.getParam("device_id", device_id_))
-  {
-    ROS_WARN ("~device_id is not set! Using first device.");
-    device_id_ = "#1";
-  }
-
-  // Camera TF frames
-  pnh_.param("ir_frame_id", ir_frame_id_, std::string("/openni_ir_optical_frame"));
-  pnh_.param("rgb_frame_id", color_frame_id_, std::string("/openni_rgb_optical_frame"));
-  pnh_.param("depth_frame_id", depth_frame_id_, std::string("/openni_depth_optical_frame"));
-
-  ROS_DEBUG("ir_frame_id = '%s' ", ir_frame_id_.c_str());
-  ROS_DEBUG("rgb_frame_id = '%s' ", color_frame_id_.c_str());
-  ROS_DEBUG("depth_frame_id = '%s' ", depth_frame_id_.c_str());
-
-  pnh_.param("rgb_camera_info_url", color_info_url_, std::string());
-  pnh_.param("depth_camera_info_url", ir_info_url_, std::string());
-
-  pnh_.param("enable_reconnect", enable_reconnect_, true);
-
-  pnh_.param("serialnumber_as_name", serialnumber_as_name_, false);
-
-}
-
-std::string OpenNI2Driver::resolveDeviceURI(const std::string& device_id) throw(OpenNI2Exception)
+std::string OpenNI2Driver::resolveDeviceURI(const std::string& device_id)
 {
   // retrieve available device URIs, they look like this: "1d27/0601@1/5"
   // which is <vendor ID>/<product ID>@<bus number>/<device number>
@@ -806,7 +797,7 @@ std::string OpenNI2Driver::resolveDeviceURI(const std::string& device_id) throw(
       }
       catch (const OpenNI2Exception& exception)
       {
-        ROS_WARN("Could not query serial number of device \"%s\":", exception.what());
+        RCLCPP_WARN(this->get_logger(), "Could not query serial number of device \"%s\":", exception.what());
       }
     }
 
@@ -832,45 +823,42 @@ std::string OpenNI2Driver::resolveDeviceURI(const std::string& device_id) throw(
     }
     if (match_found)
       return matched_uri;
-    else
-      return "INVALID";
   }
+  return "INVALID";
 }
 
 void OpenNI2Driver::initDevice()
 {
-  while (ros::ok() && !device_)
+  while (rclcpp::ok() && !device_)
   {
     try
     {
       std::string device_URI = resolveDeviceURI(device_id_);
-      device_ = device_manager_->getDevice(device_URI);
+      device_ = device_manager_->getDevice(device_URI, this);
       bus_id_ = extractBusID(device_->getUri() );
     }
     catch (const OpenNI2Exception& exception)
     {
       if (!device_)
       {
-        ROS_INFO("No matching device found.... waiting for devices. Reason: %s", exception.what());
+        RCLCPP_INFO(this->get_logger(), "No matching device found.... waiting for devices. Reason: %s", exception.what());
         boost::this_thread::sleep(boost::posix_time::seconds(3));
         continue;
       }
       else
       {
-        ROS_ERROR("Could not retrieve device. Reason: %s", exception.what());
+        RCLCPP_ERROR(this->get_logger(), "Could not retrieve device. Reason: %s", exception.what());
         exit(-1);
       }
     }
   }
 
-  while (ros::ok() && !device_->isValid())
+  while (rclcpp::ok() && !device_->isValid())
   {
-    ROS_DEBUG("Waiting for device initialization..");
+    RCLCPP_ERROR(this->get_logger(), "Waiting for device initialization..");
     boost::this_thread::sleep(boost::posix_time::milliseconds(100));
   }
-
 }
-
 
 int OpenNI2Driver::extractBusID(const std::string& uri) const
 {
@@ -881,7 +869,6 @@ int OpenNI2Driver::extractBusID(const std::string& uri) const
   int rtn = atoi(bus_id.c_str());
   return rtn;
 }
-
 
 bool OpenNI2Driver::isConnected() const
 {
@@ -901,7 +888,7 @@ bool OpenNI2Driver::isConnected() const
   return false;
 }
 
-void OpenNI2Driver::monitorConnection(const ros::TimerEvent &event)
+void OpenNI2Driver::monitorConnection()
 {
   // If the connection is lost, clean up the device.  If connected
   // and the devices is not initialized, then initialize.
@@ -909,27 +896,27 @@ void OpenNI2Driver::monitorConnection(const ros::TimerEvent &event)
   {
     if( !device_ )
     {
-      ROS_INFO_STREAM("Detected re-connect...attempting reinit");
+      RCLCPP_INFO_STREAM(this->get_logger(), "Detected re-connect...attempting reinit");
       try
       {
         {
         boost::lock_guard<boost::mutex> lock(connect_mutex_);
         std::string device_URI = resolveDeviceURI(device_id_);
-        device_ = device_manager_->getDevice(device_URI);
+        device_ = device_manager_->getDevice(device_URI, this);
         bus_id_ = extractBusID(device_->getUri() );
-        while (ros::ok() && !device_->isValid())
+        while (rclcpp::ok() && !device_->isValid())
         {
-          ROS_INFO("Waiting for device initialization, before configuring and restarting publishers");
+          RCLCPP_INFO(this->get_logger(), "Waiting for device initialization, before configuring and restarting publishers");
           boost::this_thread::sleep(boost::posix_time::milliseconds(100));
         }
         }
-        ROS_INFO_STREAM("Re-applying configuration to camera on re-init");
-        config_init_ = false;
+        RCLCPP_INFO_STREAM(this->get_logger(), "Re-applying configuration to camera on re-init");
+        //config_init_ = false;
         applyConfigToOpenNIDevice();
 
         // The color stream must be started in order to adjust the exposure white
         // balance.
-        ROS_INFO_STREAM("Starting color stream to adjust camera");
+        RCLCPP_INFO_STREAM(this->get_logger(), "Starting color stream to adjust camera");
         colorConnectCb();
 
         // If auto exposure/white balance is disabled, then the rbg image won't
@@ -938,32 +925,32 @@ void OpenNI2Driver::monitorConnection(const ros::TimerEvent &event)
         // white balance are disabled, and FIXED exposure is used instead.
         if((!auto_exposure_ && !auto_white_balance_ ) && exposure_ == 0)
         {
-          ROS_WARN_STREAM("Reconnection should not be enabled if auto expousre"
+          RCLCPP_WARN_STREAM(this->get_logger(), "Reconnection should not be enabled if auto expousre"
                           << "/white balance are disabled.  Temporarily working"
                           << " around this issue");
-          ROS_WARN_STREAM("Toggling exposure and white balance to auto on re-connect"
+          RCLCPP_WARN_STREAM(this->get_logger(), "Toggling exposure and white balance to auto on re-connect"
                           << ", otherwise image will be very dark");
           device_->setAutoExposure(true);
           device_->setAutoWhiteBalance(true);
-          ROS_INFO_STREAM("Waiting for color camera to come up and adjust");
+          RCLCPP_INFO_STREAM(this->get_logger(), "Waiting for color camera to come up and adjust");
           // It takes about 2.5 seconds for the camera to adjust
           boost::this_thread::sleep(boost::posix_time::milliseconds(2500));
-          ROS_WARN_STREAM("Resetting auto exposure and white balance to previous values");
+          RCLCPP_WARN_STREAM(this->get_logger(), "Resetting auto exposure and white balance to previous values");
           device_->setAutoExposure(auto_exposure_);
           device_->setAutoWhiteBalance(auto_white_balance_);
         }
 
-        ROS_INFO_STREAM("Restarting publishers, if needed");
+        RCLCPP_INFO_STREAM(this->get_logger(), "Restarting publishers, if needed");
         irConnectCb();
         depthConnectCb();
-        ROS_INFO_STREAM("Done re-initializing cameras");
+        RCLCPP_INFO_STREAM(this->get_logger(), "Done re-initializing cameras");
       }
 
       catch (const OpenNI2Exception& exception)
       {
         if (!device_)
         {
-          ROS_INFO_STREAM("Failed to re-initialize device on bus: " << bus_id_
+          RCLCPP_INFO_STREAM(this->get_logger(), "Failed to re-initialize device on bus: " << bus_id_
                           << ", reason: " << exception.what());
         }
       }
@@ -971,7 +958,7 @@ void OpenNI2Driver::monitorConnection(const ros::TimerEvent &event)
   }
   else if( device_ )
   {
-    ROS_WARN_STREAM("Detected loss of connection.  Stopping all streams and resetting device");
+    RCLCPP_WARN_STREAM(this->get_logger(), "Detected loss of connection.  Stopping all streams and resetting device");
     device_->stopAllStreams();
     device_.reset();
   }
@@ -980,23 +967,6 @@ void OpenNI2Driver::monitorConnection(const ros::TimerEvent &event)
 
 void OpenNI2Driver::genVideoModeTableMap()
 {
-  /*
-   * #  Video modes defined by dynamic reconfigure:
-output_mode_enum = gen.enum([  gen.const(  "SXGA_30Hz", int_t, 1,  "1280x1024@30Hz"),
-                               gen.const(  "SXGA_15Hz", int_t, 2,  "1280x1024@15Hz"),
-                               gen.const(   "XGA_30Hz", int_t, 3,  "1280x720@30Hz"),
-                               gen.const(   "XGA_15Hz", int_t, 4,  "1280x720@15Hz"),
-                               gen.const(   "VGA_30Hz", int_t, 5,  "640x480@30Hz"),
-                               gen.const(   "VGA_25Hz", int_t, 6,  "640x480@25Hz"),
-                               gen.const(  "QVGA_25Hz", int_t, 7,  "320x240@25Hz"),
-                               gen.const(  "QVGA_30Hz", int_t, 8,  "320x240@30Hz"),
-                               gen.const(  "QVGA_60Hz", int_t, 9,  "320x240@60Hz"),
-                               gen.const( "QQVGA_25Hz", int_t, 10, "160x120@25Hz"),
-                               gen.const( "QQVGA_30Hz", int_t, 11, "160x120@30Hz"),
-                               gen.const( "QQVGA_60Hz", int_t, 12, "160x120@60Hz")],
-                               "output mode")
-  */
-
   video_modes_lookup_.clear();
 
   OpenNI2VideoMode video_mode;
@@ -1006,109 +976,103 @@ output_mode_enum = gen.enum([  gen.const(  "SXGA_30Hz", int_t, 1,  "1280x1024@30
   video_mode.y_resolution_ = 1024;
   video_mode.frame_rate_ = 30;
 
-  video_modes_lookup_[1] = video_mode;
+  video_modes_lookup_["SXGA_30Hz"] = video_mode;
 
   // SXGA_15Hz
   video_mode.x_resolution_ = 1280;
   video_mode.y_resolution_ = 1024;
   video_mode.frame_rate_ = 15;
 
-  video_modes_lookup_[2] = video_mode;
+  video_modes_lookup_["SXGA_15hz"] = video_mode;
 
   // XGA_30Hz
   video_mode.x_resolution_ = 1280;
   video_mode.y_resolution_ = 720;
   video_mode.frame_rate_ = 30;
 
-  video_modes_lookup_[3] = video_mode;
+  video_modes_lookup_["XGA_30Hz"] = video_mode;
 
   // XGA_15Hz
   video_mode.x_resolution_ = 1280;
   video_mode.y_resolution_ = 720;
   video_mode.frame_rate_ = 15;
 
-  video_modes_lookup_[4] = video_mode;
+  video_modes_lookup_["XGA_15Hz"] = video_mode;
 
   // VGA_30Hz
   video_mode.x_resolution_ = 640;
   video_mode.y_resolution_ = 480;
   video_mode.frame_rate_ = 30;
 
-  video_modes_lookup_[5] = video_mode;
+  video_modes_lookup_["VGA_30Hz"] = video_mode;
 
   // VGA_25Hz
   video_mode.x_resolution_ = 640;
   video_mode.y_resolution_ = 480;
   video_mode.frame_rate_ = 25;
 
-  video_modes_lookup_[6] = video_mode;
+  video_modes_lookup_["VGA_25Hz"] = video_mode;
 
   // QVGA_25Hz
   video_mode.x_resolution_ = 320;
   video_mode.y_resolution_ = 240;
   video_mode.frame_rate_ = 25;
 
-  video_modes_lookup_[7] = video_mode;
+  video_modes_lookup_["QVGA_25Hz"] = video_mode;
 
   // QVGA_30Hz
   video_mode.x_resolution_ = 320;
   video_mode.y_resolution_ = 240;
   video_mode.frame_rate_ = 30;
 
-  video_modes_lookup_[8] = video_mode;
+  video_modes_lookup_["QVGA_30Hz"] = video_mode;
 
   // QVGA_60Hz
   video_mode.x_resolution_ = 320;
   video_mode.y_resolution_ = 240;
   video_mode.frame_rate_ = 60;
 
-  video_modes_lookup_[9] = video_mode;
+  video_modes_lookup_["QVGA_60Hz"] = video_mode;
 
   // QQVGA_25Hz
   video_mode.x_resolution_ = 160;
   video_mode.y_resolution_ = 120;
   video_mode.frame_rate_ = 25;
 
-  video_modes_lookup_[10] = video_mode;
+  video_modes_lookup_["QVGA_25Hz"] = video_mode;
 
   // QQVGA_30Hz
   video_mode.x_resolution_ = 160;
   video_mode.y_resolution_ = 120;
   video_mode.frame_rate_ = 30;
 
-  video_modes_lookup_[11] = video_mode;
+  video_modes_lookup_["QQVGA_30Hz"] = video_mode;
 
   // QQVGA_60Hz
   video_mode.x_resolution_ = 160;
   video_mode.y_resolution_ = 120;
   video_mode.frame_rate_ = 60;
 
-  video_modes_lookup_[12] = video_mode;
-
+  video_modes_lookup_["QQVGA_60Hz"] = video_mode;
 }
 
-int OpenNI2Driver::lookupVideoModeFromDynConfig(int mode_nr, OpenNI2VideoMode& video_mode)
+bool OpenNI2Driver::lookupVideoMode(const std::string& mode, OpenNI2VideoMode& video_mode)
 {
-  int ret = -1;
-
-  std::map<int, OpenNI2VideoMode>::const_iterator it;
-
-  it = video_modes_lookup_.find(mode_nr);
-
-  if (it!=video_modes_lookup_.end())
+  auto it = video_modes_lookup_.find(mode);
+  if (it != video_modes_lookup_.end())
   {
     video_mode = it->second;
-    ret = 0;
+    return true;
   }
 
-  return ret;
+  return false;
 }
 
-sensor_msgs::ImageConstPtr OpenNI2Driver::rawToFloatingPointConversion(sensor_msgs::ImageConstPtr raw_image)
+sensor_msgs::msg::Image::ConstSharedPtr OpenNI2Driver::rawToFloatingPointConversion(sensor_msgs::msg::Image::ConstSharedPtr raw_image)
 {
   static const float bad_point = std::numeric_limits<float>::quiet_NaN ();
 
-  sensor_msgs::ImagePtr new_image = boost::make_shared<sensor_msgs::Image>();
+  sensor_msgs::msg::Image::SharedPtr new_image = std::make_shared<sensor_msgs::msg::Image>();
 
   new_image->header = raw_image->header;
   new_image->width = raw_image->width;
@@ -1137,4 +1101,7 @@ sensor_msgs::ImageConstPtr OpenNI2Driver::rawToFloatingPointConversion(sensor_ms
   return new_image;
 }
 
-}
+}  // namespace openni2_wrapper
+
+#include "rclcpp_components/register_node_macro.hpp"
+RCLCPP_COMPONENTS_REGISTER_NODE(openni2_wrapper::OpenNI2Driver)

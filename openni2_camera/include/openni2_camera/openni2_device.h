@@ -41,7 +41,8 @@
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
 
-#include <sensor_msgs/Image.h>
+#include <rclcpp/rclcpp.hpp>
+#include <sensor_msgs/msg/image.hpp>
 
 #include <string>
 #include <vector>
@@ -57,14 +58,15 @@ class SensorInfo;
 namespace openni2_wrapper
 {
 
-typedef boost::function<void(sensor_msgs::ImagePtr image)> FrameCallbackFunction;
+typedef boost::function<void(sensor_msgs::msg::Image::SharedPtr image)> FrameCallbackFunction;
 
 class OpenNI2FrameListener;
 
 class OpenNI2Device
 {
 public:
-  OpenNI2Device(const std::string& device_URI) throw (OpenNI2Exception);
+  OpenNI2Device(const std::string& device_URI,
+                rclcpp::Node* node);
   virtual ~OpenNI2Device();
 
   const std::string getUri() const;
@@ -96,12 +98,12 @@ public:
   bool isDepthStreamStarted();
 
   bool isImageRegistrationModeSupported() const;
-  void setImageRegistrationMode(bool enabled) throw (OpenNI2Exception);
-  void setDepthColorSync(bool enabled) throw (OpenNI2Exception);
+  void setImageRegistrationMode(bool enabled);
+  void setDepthColorSync(bool enabled);
 
-  const OpenNI2VideoMode getIRVideoMode() throw (OpenNI2Exception);
-  const OpenNI2VideoMode getColorVideoMode() throw (OpenNI2Exception);
-  const OpenNI2VideoMode getDepthVideoMode() throw (OpenNI2Exception);
+  const OpenNI2VideoMode getIRVideoMode();
+  const OpenNI2VideoMode getColorVideoMode();
+  const OpenNI2VideoMode getDepthVideoMode();
 
   const std::vector<OpenNI2VideoMode>& getSupportedIRVideoModes() const;
   const std::vector<OpenNI2VideoMode>& getSupportedColorVideoModes() const;
@@ -111,9 +113,9 @@ public:
   bool isColorVideoModeSupported(const OpenNI2VideoMode& video_mode) const;
   bool isDepthVideoModeSupported(const OpenNI2VideoMode& video_mode) const;
 
-  void setIRVideoMode(const OpenNI2VideoMode& video_mode) throw (OpenNI2Exception);
-  void setColorVideoMode(const OpenNI2VideoMode& video_mode) throw (OpenNI2Exception);
-  void setDepthVideoMode(const OpenNI2VideoMode& video_mode) throw (OpenNI2Exception);
+  void setIRVideoMode(const OpenNI2VideoMode& video_mode);
+  void setColorVideoMode(const OpenNI2VideoMode& video_mode);
+  void setDepthVideoMode(const OpenNI2VideoMode& video_mode);
 
   void setIRFrameCallback(FrameCallbackFunction callback);
   void setColorFrameCallback(FrameCallbackFunction callback);
@@ -124,9 +126,9 @@ public:
   float getDepthFocalLength (int output_y_resolution) const;
   float getBaseline () const;
 
-  void setAutoExposure(bool enable) throw (OpenNI2Exception);
-  void setAutoWhiteBalance(bool enable) throw (OpenNI2Exception);
-  void setExposure(int exposure) throw (OpenNI2Exception);
+  void setAutoExposure(bool enable);
+  void setAutoWhiteBalance(bool enable);
+  void setExposure(int exposure);
 
   bool getAutoExposure() const;
   bool getAutoWhiteBalance() const;
@@ -137,9 +139,9 @@ public:
 protected:
   void shutdown();
 
-  boost::shared_ptr<openni::VideoStream> getIRVideoStream() const throw (OpenNI2Exception);
-  boost::shared_ptr<openni::VideoStream> getColorVideoStream() const throw (OpenNI2Exception);
-  boost::shared_ptr<openni::VideoStream> getDepthVideoStream() const throw (OpenNI2Exception);
+  boost::shared_ptr<openni::VideoStream> getIRVideoStream() const;
+  boost::shared_ptr<openni::VideoStream> getColorVideoStream() const;
+  boost::shared_ptr<openni::VideoStream> getDepthVideoStream() const;
 
   boost::shared_ptr<openni::Device> openni_device_;
   boost::shared_ptr<openni::DeviceInfo> device_info_;

@@ -36,6 +36,8 @@
 
 #include <boost/thread/mutex.hpp>
 
+#include <rclcpp/rclcpp.hpp>
+
 #include <vector>
 #include <string>
 #include <ostream>
@@ -58,8 +60,8 @@ public:
   boost::shared_ptr<std::vector<std::string> > getConnectedDeviceURIs() const;
   std::size_t getNumOfConnectedDevices() const;
 
-  boost::shared_ptr<OpenNI2Device> getAnyDevice();
-  boost::shared_ptr<OpenNI2Device> getDevice(const std::string& device_URI);
+  boost::shared_ptr<OpenNI2Device> getAnyDevice(rclcpp::Node* node);
+  boost::shared_ptr<OpenNI2Device> getDevice(const std::string& device_URI, rclcpp::Node* node);
 
   std::string getSerial(const std::string& device_URI) const;
 

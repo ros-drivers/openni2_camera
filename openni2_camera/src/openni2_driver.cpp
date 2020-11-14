@@ -142,7 +142,7 @@ void OpenNI2Driver::advertiseROSTopics()
 
   // The camera names are set to [rgb|depth]_[serial#], e.g. depth_B00367707227042B.
   // camera_info_manager substitutes this for ${NAME} in the URL.
-  std::string serial_number = device_->getStringID();
+  std::string serial_number = device_manager_->getSerial(device_->getUri());
   std::string color_name, ir_name;
 
   color_name = "rgb_"   + serial_number;

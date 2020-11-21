@@ -123,6 +123,15 @@ private:
   /** \brief indicates if reconnect logic is enabled. */
   bool enable_reconnect_;
 
+  /** \brief indicates if the serialnumber is used in the camera names.
+   * Default is false. The name is based on the device and vendor name.
+   * This produces non-unique camera names, if multiple camaras of the
+   * same type are used on the same machine.
+   * Set to true, to get names with serialnumber. The names will always
+   * be unique. This matches the 'openni' behaviour.
+   */
+  bool serialnumber_as_name_;
+
   /** \brief get_serial server*/
   ros::ServiceServer get_serial_server;
 

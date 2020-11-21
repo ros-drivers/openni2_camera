@@ -53,7 +53,8 @@ OpenNI2Driver::OpenNI2Driver(ros::NodeHandle& n, ros::NodeHandle& pnh) :
     color_subscribers_(false),
     depth_subscribers_(false),
     depth_raw_subscribers_(false),
-    enable_reconnect_(false)
+    enable_reconnect_(false),
+    serialnumber_as_name_(false)
 {
 
   genVideoModeTableMap();
@@ -142,9 +143,13 @@ void OpenNI2Driver::advertiseROSTopics()
 
   // The camera names are set to [rgb|depth]_[serial#], e.g. depth_B00367707227042B.
   // camera_info_manager substitutes this for ${NAME} in the URL.
-  std::string serial_number = device_manager_->getSerial(device_->getUri());
-  std::string color_name, ir_name;
+  std::string serial_number;
+  if (serialnumber_as_name_)
+    serial_number = device_manager_->getSerial(device_->getUri());
+  else
+    serial_number = device_->getStringID();
 
+  std::string color_name, ir_name;
   color_name = "rgb_"   + serial_number;
   ir_name  = "depth_" + serial_number;
 
@@ -713,6 +718,8 @@ void OpenNI2Driver::readConfigFromParameterServer()
   pnh_.param("depth_camera_info_url", ir_info_url_, std::string());
 
   pnh_.param("enable_reconnect", enable_reconnect_, true);
+
+  pnh_.param("serialnumber_as_name", serialnumber_as_name_, false);
 
 }
 

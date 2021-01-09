@@ -63,6 +63,9 @@
   <arg name="num_worker_threads" default="4"
        doc="Worker threads for the nodelet manager" />
 
+  <arg name="enable_reconnect" default="true"
+       doc="Reconnect to device" />
+
   <!-- Push down all topics/nodelets into "camera" namespace -->
   <group ns="$(arg camera)">
 
@@ -92,6 +95,7 @@
       <arg name="respawn"                         value="$(arg respawn)" />
       <arg name="depth_registration"              value="$(arg depth_registration)" />
       <arg name="color_depth_synchronization"     value="$(arg color_depth_synchronization)" />
+      <arg name="enable_reconnect"                value="$(arg enable_reconnect)" />
     </include>
 
     <!-- Load standard constellation of processing nodelets -->

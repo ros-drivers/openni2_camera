@@ -66,6 +66,9 @@
   <arg name="enable_reconnect" default="true"
        doc="Reconnect to device" />
 
+  <arg name="serialnumber_as_name" default="false"
+       doc="Use the serialnumber as the device name. True matches openni_camera behaviour" />
+
   <!-- Push down all topics/nodelets into "camera" namespace -->
   <group ns="$(arg camera)">
 
@@ -96,6 +99,7 @@
       <arg name="depth_registration"              value="$(arg depth_registration)" />
       <arg name="color_depth_synchronization"     value="$(arg color_depth_synchronization)" />
       <arg name="enable_reconnect"                value="$(arg enable_reconnect)" />
+      <arg name="serialnumber_as_name"            value="$(arg serialnumber_as_name)" />
     </include>
 
     <!-- Load standard constellation of processing nodelets -->

@@ -1,3 +1,4 @@
+<?xml version="1.0" ?>
 <!-- Launch the OpenNI2 device driver -->
 <launch>
 
@@ -27,6 +28,12 @@
   <arg     if="$(arg respawn)" name="bond" value="" />
   <arg unless="$(arg respawn)" name="bond" value="--no-bond" />
 
+  <arg name="enable_reconnect" default="true"
+       doc="Reconnect to device" />
+
+  <arg name="serialnumber_as_name" default="false"
+       doc="Use the serialnumber as the device name. True matches openni_camera behaviour" />
+
   <!-- Remapping arguments -->
   <arg name="rgb"              default="rgb" />
   <arg name="ir"               default="ir" />
@@ -51,6 +58,9 @@
 
     <param name="depth_registration" value="$(arg depth_registration)" />
     <param name="color_depth_synchronization" value="$(arg color_depth_synchronization)" />
+
+    <param name="enable_reconnect" value="$(arg enable_reconnect)" />
+    <param name="serialnumber_as_name" value="$(arg serialnumber_as_name)" />
 
     <remap from="ir" to="$(arg ir)" />
     <remap from="rgb" to="$(arg rgb)" />

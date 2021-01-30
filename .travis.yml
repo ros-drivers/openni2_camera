@@ -13,7 +13,7 @@ notifications:
       - gm130s@gmail.com
 env:
   jobs:
-    - ROS_DISTRO="kinetic"   ROS_REPO=ros ABICHECK_URL='github:ros-drivers/openni2_camera#ros1'
+    - ROS_DISTRO="kinetic"   ROS_REPO=ros ABICHECK_URL='github:ros-drivers/openni2_camera#ros1' ABICHECK_MERGE=auto
     - ROS_DISTRO="kinetic"   PRERELEASE=true
     - ROS_DISTRO="melodic"   ROS_REPO=ros ABICHECK_URL='github:ros-drivers/openni2_camera#ros1' ABICHECK_MERGE=auto
     - ROS_DISTRO="melodic"   PRERELEASE=true

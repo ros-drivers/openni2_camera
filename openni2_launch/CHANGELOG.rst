@@ -2,8 +2,8 @@
 Changelog for package openni2_launch
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.5.1 (2021-02-01)
+------------------
 * Default branch update for ROS1 development.
 * [CI] Add GitHub Actions configs
 

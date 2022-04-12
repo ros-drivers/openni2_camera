@@ -2,6 +2,10 @@
 Changelog for package openni2_launch
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.6.0 (2022-04-12)
+------------------
+* [capability] Add depth_registered and depth_registered_filtered arguments `#111 <https://github.com/ros-drivers/openni2_camera/issues/111>`_ 
+
 1.5.1 (2021-02-01)
 ------------------
 * Default branch update for ROS1 development.

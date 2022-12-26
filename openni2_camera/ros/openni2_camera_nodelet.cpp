@@ -53,5 +53,5 @@ private:
 
 }
 
-#include <pluginlib/class_list_macros.h>
+#include <pluginlib/class_list_macros.hpp>
 PLUGINLIB_EXPORT_CLASS(openni2_camera::OpenNI2DriverNodelet, nodelet::Nodelet)

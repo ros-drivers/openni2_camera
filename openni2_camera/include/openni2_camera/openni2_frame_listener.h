@@ -69,7 +69,7 @@ private:
   FrameCallbackFunction callback_;
 
   bool user_device_timer_;
-  boost::shared_ptr<OpenNI2TimerFilter> timer_filter_;
+  std::shared_ptr<OpenNI2TimerFilter> timer_filter_;
 
   rclcpp::Node* node_;  // needed for time
   rclcpp::Time prev_time_stamp_;

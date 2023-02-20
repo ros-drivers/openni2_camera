@@ -5,7 +5,6 @@ if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 14)
 endif()
 
-find_package(Boost REQUIRED COMPONENTS system thread)
 find_package(ament_cmake REQUIRED)
 find_package(builtin_interfaces REQUIRED)
 find_package(camera_info_manager REQUIRED)
@@ -28,7 +27,6 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 
 include_directories(
   include
-  ${Boost_INCLUDE_DIRS}
   ${PC_OPENNI2_INCLUDE_DIRS}
 )
 
@@ -45,7 +43,6 @@ add_library(openni2_wrapper SHARED
   src/openni2_video_mode.cpp
 )
 target_link_libraries(openni2_wrapper
-  ${Boost_LIBRARIES}
   ${PC_OPENNI2_LIBRARIES}
 )
 ament_target_dependencies(openni2_wrapper
@@ -59,14 +56,13 @@ ament_target_dependencies(openni2_wrapper
 )
 
 #add_executable(test_wrapper test/test_wrapper.cpp)
-#target_link_libraries(test_wrapper openni2_wrapper ${Boost_LIBRARIES})
+#target_link_libraries(test_wrapper openni2_wrapper)
 
 add_library(openni2_camera_lib SHARED
   src/openni2_driver.cpp
 )
 target_link_libraries(openni2_camera_lib
   openni2_wrapper
-  ${Boost_LIBRARIE}
 )
 ament_target_dependencies(openni2_camera_lib
   camera_info_manager

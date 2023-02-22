@@ -9,7 +9,7 @@
   <license>BSD</license>
 
   <maintainer email="mike@vanadiumlabs.com">Michael Ferguson</maintainer>
-  <maintainer email="isaac.saito@plusonerobotics.com">Isaac I. Y. Saito</maintainer>
+  <maintainer email="iisaac.saito@gmail.com">Isaac I. Y. Saito</maintainer>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
   <buildtool_depend>rosidl_default_generator</buildtool_depend>

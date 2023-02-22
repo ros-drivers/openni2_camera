@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 jobs:
   industrial_ci:
-    name: ROS2 (${{ matrix.ros_repo }})
+    name: ROS2 (${{ matrix.env.ROS_REPO }})
     strategy:
       fail-fast: false
       matrix:

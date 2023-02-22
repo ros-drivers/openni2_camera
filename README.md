@@ -35,7 +35,6 @@ ros2 launch openni2_camera camera_with_cloud.launch.py
 
 ## Migration from ROS1
 
- * The GetService message has moved to a new openni2_camera_msgs package.
  * The rgb/image topic has been renamed to rgb/image_raw for consistency.
  * The nodelet has been refactored into an rclcpp component called
    "openni2_wrapper::OpenNI2Driver". See the launch folder for an example

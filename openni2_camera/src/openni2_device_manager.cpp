@@ -36,7 +36,7 @@
 
 #include <boost/make_shared.hpp>
 
-#include <ros/ros.h>
+#include <rclcpp/rclcpp.hpp>
 
 #include <set>
 #include <string>
@@ -49,7 +49,7 @@ namespace openni2_wrapper
 class OpenNI2DeviceInfoComparator
 {
 public:
-  bool operator()(const OpenNI2DeviceInfo& di1, const OpenNI2DeviceInfo& di2)
+  bool operator()(const OpenNI2DeviceInfo& di1, const OpenNI2DeviceInfo& di2) const
   {
     return (di1.uri_.compare(di2.uri_) < 0);
   }
@@ -90,7 +90,7 @@ public:
 
   virtual void onDeviceStateChanged(const openni::DeviceInfo* pInfo, openni::DeviceState state)
   {
-    ROS_INFO("Device \"%s\" error state changed to %d\n", pInfo->getUri(), state);
+    RCLCPP_INFO(rclcpp::get_logger("openni2"), "Device \"%s\" error state changed to %d\n", pInfo->getUri(), state);
 
     switch (state)
     {
@@ -112,7 +112,7 @@ public:
 
     const OpenNI2DeviceInfo device_info_wrapped = openni2_convert(pInfo);
 
-    ROS_INFO("Device \"%s\" found.", pInfo->getUri());
+    RCLCPP_INFO(rclcpp::get_logger("openni2"), "Device \"%s\" found.", pInfo->getUri());
 
     // make sure it does not exist in set before inserting
     device_set_.erase(device_info_wrapped);
@@ -124,7 +124,7 @@ public:
   {
     boost::mutex::scoped_lock l(device_mutex_);
 
-    ROS_WARN("Device \"%s\" disconnected\n", pInfo->getUri());
+    RCLCPP_WARN(rclcpp::get_logger("openni2"), "Device \"%s\" disconnected\n", pInfo->getUri());
 
     const OpenNI2DeviceInfo device_info_wrapped = openni2_convert(pInfo);
     device_set_.erase(device_info_wrapped);
@@ -243,13 +243,13 @@ std::string OpenNI2DeviceManager::getSerial(const std::string& Uri) const
   return ret;
 }
 
-boost::shared_ptr<OpenNI2Device> OpenNI2DeviceManager::getAnyDevice()
+boost::shared_ptr<OpenNI2Device> OpenNI2DeviceManager::getAnyDevice(rclcpp::Node* node)
 {
-  return boost::make_shared<OpenNI2Device>("");
+  return boost::make_shared<OpenNI2Device>("", node);
 }
-boost::shared_ptr<OpenNI2Device> OpenNI2DeviceManager::getDevice(const std::string& device_URI)
+boost::shared_ptr<OpenNI2Device> OpenNI2DeviceManager::getDevice(const std::string& device_URI, rclcpp::Node* node)
 {
-  return boost::make_shared<OpenNI2Device>(device_URI);
+  return boost::make_shared<OpenNI2Device>(device_URI, node);
 }
 
 

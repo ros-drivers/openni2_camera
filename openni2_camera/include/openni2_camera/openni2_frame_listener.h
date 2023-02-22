@@ -34,7 +34,8 @@
 
 #include "openni2_camera/openni2_device.h"
 
-#include <sensor_msgs/Image.h>
+#include <rclcpp/rclcpp.hpp>
+#include <sensor_msgs/msg/image.hpp>
 
 #include <vector>
 
@@ -48,7 +49,7 @@ class OpenNI2TimerFilter;
 class OpenNI2FrameListener : public openni::VideoStream::NewFrameListener
 {
 public:
-  OpenNI2FrameListener();
+  OpenNI2FrameListener(rclcpp::Node* node);
 
   virtual ~OpenNI2FrameListener()
   { };
@@ -70,7 +71,8 @@ private:
   bool user_device_timer_;
   boost::shared_ptr<OpenNI2TimerFilter> timer_filter_;
 
-  double prev_time_stamp_;
+  rclcpp::Node* node_;  // needed for time
+  rclcpp::Time prev_time_stamp_;
 };
 
 }

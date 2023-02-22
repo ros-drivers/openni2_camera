@@ -33,22 +33,23 @@
 #include "openni2_camera/openni2_frame_listener.h"
 #include "openni2_camera/openni2_timer_filter.h"
 
-#include <sensor_msgs/image_encodings.h>
+#include <sensor_msgs/image_encodings.hpp>
 
-#include <ros/ros.h>
+#include <rclcpp/rclcpp.hpp>
 
 #define TIME_FILTER_LENGTH 15
 
 namespace openni2_wrapper
 {
 
-OpenNI2FrameListener::OpenNI2FrameListener() :
+OpenNI2FrameListener::OpenNI2FrameListener(rclcpp::Node* node) :
     callback_(0),
     user_device_timer_(false),
     timer_filter_(new OpenNI2TimerFilter(TIME_FILTER_LENGTH)),
-    prev_time_stamp_(0.0)
+    node_(node),
+    prev_time_stamp_(node_->now())
 {
-  ros::Time::init();
+
 }
 
 void OpenNI2FrameListener::setUseDeviceTimer(bool enable)
@@ -65,35 +66,42 @@ void OpenNI2FrameListener::onNewFrame(openni::VideoStream& stream)
 
   if (m_frame.isValid() && callback_)
   {
-    sensor_msgs::ImagePtr image(new sensor_msgs::Image);
+    sensor_msgs::msg::Image::SharedPtr image(new sensor_msgs::msg::Image);
 
-    ros::Time ros_now = ros::Time::now();
+    rclcpp::Time ros_now = node_->now();
 
     if (!user_device_timer_)
     {
       image->header.stamp = ros_now;
 
-      ROS_DEBUG("Time interval between frames: %.4f ms", (float)((ros_now.toSec()-prev_time_stamp_)*1000.0));
+      RCLCPP_DEBUG(rclcpp::get_logger("openni2"), "Time interval between frames: %.4f ms", (float)((ros_now - prev_time_stamp_).nanoseconds() / 1e6));
 
-      prev_time_stamp_ = ros_now.toSec();
-    } else
+      prev_time_stamp_ = ros_now;
+    }
+    else
     {
-      uint64_t device_time = m_frame.getTimestamp();
+      uint64_t device_time_in_nsec = m_frame.getTimestamp() * 1000;
+      uint64_t ros_time_in_nsec = ros_now.nanoseconds();
 
-      double device_time_in_sec = static_cast<double>(device_time)/1000000.0;
-      double ros_time_in_sec = ros_now.toSec();
-
-      double time_diff = ros_time_in_sec-device_time_in_sec;
+      double time_diff;
+      if (ros_time_in_nsec > device_time_in_nsec)
+      {
+        time_diff = (double)(ros_time_in_nsec - device_time_in_nsec) / 1e9;
+      }
+      else
+      {
+        time_diff = -(double)(device_time_in_nsec - ros_time_in_nsec) / 1e9;
+      }
 
       timer_filter_->addSample(time_diff);
 
-      double filtered_time_diff = timer_filter_->getMedian();
+      rclcpp::Duration filtered_time_diff(0, timer_filter_->getMedian() * 1e9);
 
-      double corrected_timestamp = device_time_in_sec+filtered_time_diff;
+      rclcpp::Time corrected_timestamp = rclcpp::Time(device_time_in_nsec) + filtered_time_diff;
 
-      image->header.stamp.fromSec(corrected_timestamp);
+      image->header.stamp = corrected_timestamp;
 
-      ROS_DEBUG("Time interval between frames: %.4f ms", (float)((corrected_timestamp-prev_time_stamp_)*1000.0));
+      RCLCPP_DEBUG(rclcpp::get_logger("openni2"), "Time interval between frames: %.4f ms", (float)((corrected_timestamp - prev_time_stamp_).nanoseconds() / 1e6));
 
       prev_time_stamp_ = corrected_timestamp;
     }
@@ -146,7 +154,7 @@ void OpenNI2FrameListener::onNewFrame(openni::VideoStream& stream)
         break;
       case openni::PIXEL_FORMAT_JPEG:
       default:
-        ROS_ERROR("Invalid image encoding");
+        RCLCPP_ERROR(rclcpp::get_logger("openni2"), "Invalid image encoding");
         break;
     }
 

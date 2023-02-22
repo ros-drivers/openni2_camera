@@ -17,7 +17,6 @@
   <depend>builtin_interfaces</depend>
   <depend>camera_info_manager</depend>
   <depend>libopenni2-dev</depend>
-  <depend>openni2_camera_msgs</depend>
   <depend>sensor_msgs</depend>
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>

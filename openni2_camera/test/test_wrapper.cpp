@@ -32,10 +32,6 @@
 #include "openni2_camera/openni2_device_manager.h"
 #include "openni2_camera/openni2_device.h"
 
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/thread/thread.hpp>
-#include <boost/foreach.hpp>
-
 #include <iostream>
 
 using namespace std;
@@ -66,17 +62,17 @@ int main()
 
   std::cout << device_manager;
 
-  boost::shared_ptr<std::vector<std::string> > device_uris = device_manager.getConnectedDeviceURIs();
+  std::shared_ptr<std::vector<std::string> > device_uris = device_manager.getConnectedDeviceURIs();
 
-  BOOST_FOREACH(const std::string& uri, *device_uris)
+  for(const std::string& uri : *device_uris)
   {
-    boost::shared_ptr<OpenNI2Device> device = device_manager.getDevice(uri);
+    std::shared_ptr<OpenNI2Device> device = device_manager.getDevice(uri);
 
     std::cout << *device;
 
-    device->setIRFrameCallback(boost::bind(&IRCallback, _1));
-    device->setColorFrameCallback(boost::bind(&ColorCallback, _1));
-    device->setDepthFrameCallback(boost::bind(&DepthCallback, _1));
+    device->setIRFrameCallback(std::bind(&IRCallback, _1));
+    device->setColorFrameCallback(std::bind(&ColorCallback, _1));
+    device->setDepthFrameCallback(std::bind(&DepthCallback, _1));
 
     ir_counter_ = 0;
     color_counter_ = 0;
@@ -85,7 +81,7 @@ int main()
     device->startColorStream();
     device->startDepthStream();
 
-    boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+    std::this_thread::sleep_for(1000ms);
 
     device->stopAllStreams();
 

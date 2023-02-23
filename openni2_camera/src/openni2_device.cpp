@@ -32,21 +32,22 @@
 #include "OpenNI.h"
 #include <PS1080.h> // For XN_STREAM_PROPERTY_EMITTER_DCMOS_DISTANCE property
 
-#include <boost/lexical_cast.hpp>
-#include <boost/algorithm/string/replace.hpp>
-
 #include "openni2_camera/openni2_device.h"
 #include "openni2_camera/openni2_exception.h"
 #include "openni2_camera/openni2_convert.h"
 #include "openni2_camera/openni2_frame_listener.h"
 
-#include <boost/shared_ptr.hpp>
-#include <boost/make_shared.hpp>
-
 #include <string>
 
 namespace openni2_wrapper
 {
+
+void replace_all(std::string &input, const std::string &search, const std::string &replace)
+{
+  size_t pos;
+  while ((pos = input.find(search)) != std::string::npos)
+      input.replace(pos, 1, replace);
+}
 
 OpenNI2Device::OpenNI2Device(const std::string& device_URI,
                              rclcpp::Node* node) :
@@ -61,7 +62,7 @@ OpenNI2Device::OpenNI2Device(const std::string& device_URI,
   if (rc != openni::STATUS_OK)
     THROW_OPENNI_EXCEPTION("Initialize failed\n%s\n", openni::OpenNI::getExtendedError());
 
-  openni_device_ = boost::make_shared<openni::Device>();
+  openni_device_ = std::make_shared<openni::Device>();
 
   if (device_URI.length() > 0)
   {
@@ -75,12 +76,12 @@ OpenNI2Device::OpenNI2Device(const std::string& device_URI,
   if (rc != openni::STATUS_OK)
     THROW_OPENNI_EXCEPTION("Device open failed\n%s\n", openni::OpenNI::getExtendedError());
 
-  device_info_ = boost::make_shared<openni::DeviceInfo>();
+  device_info_ = std::make_shared<openni::DeviceInfo>();
   *device_info_ = openni_device_->getDeviceInfo();
 
-  ir_frame_listener = boost::make_shared<OpenNI2FrameListener>(node);
-  color_frame_listener = boost::make_shared<OpenNI2FrameListener>(node);
-  depth_frame_listener = boost::make_shared<OpenNI2FrameListener>(node);
+  ir_frame_listener = std::make_shared<OpenNI2FrameListener>(node);
+  color_frame_listener = std::make_shared<OpenNI2FrameListener>(node);
+  depth_frame_listener = std::make_shared<OpenNI2FrameListener>(node);
 
 }
 
@@ -122,9 +123,9 @@ const std::string OpenNI2Device::getStringID() const
 {
   std::string ID_str = getName() + "_" + getVendor();
 
-  boost::replace_all(ID_str, "/", "");
-  boost::replace_all(ID_str, ".", "");
-  boost::replace_all(ID_str, "@", "");
+  replace_all(ID_str, "/", "");
+  replace_all(ID_str, ".", "");
+  replace_all(ID_str, "@", "");
 
   return ID_str;
 }
@@ -137,7 +138,7 @@ bool OpenNI2Device::isValid() const
 float OpenNI2Device::getIRFocalLength(int output_y_resolution) const
 {
   float focal_length = 0.0f;
-  boost::shared_ptr<openni::VideoStream> stream = getIRVideoStream();
+  std::shared_ptr<openni::VideoStream> stream = getIRVideoStream();
 
   if (stream)
   {
@@ -150,7 +151,7 @@ float OpenNI2Device::getIRFocalLength(int output_y_resolution) const
 float OpenNI2Device::getColorFocalLength(int output_y_resolution) const
 {
   float focal_length = 0.0f;
-  boost::shared_ptr<openni::VideoStream> stream = getColorVideoStream();
+  std::shared_ptr<openni::VideoStream> stream = getColorVideoStream();
 
   if (stream)
   {
@@ -163,7 +164,7 @@ float OpenNI2Device::getColorFocalLength(int output_y_resolution) const
 float OpenNI2Device::getDepthFocalLength(int output_y_resolution) const
 {
   float focal_length = 0.0f;
-  boost::shared_ptr<openni::VideoStream> stream = getDepthVideoStream();
+  std::shared_ptr<openni::VideoStream> stream = getDepthVideoStream();
 
   if (stream)
   {
@@ -176,7 +177,7 @@ float OpenNI2Device::getDepthFocalLength(int output_y_resolution) const
 float OpenNI2Device::getBaseline() const
 {
   float baseline = 0.075f;
-  boost::shared_ptr<openni::VideoStream> stream = getDepthVideoStream();
+  std::shared_ptr<openni::VideoStream> stream = getDepthVideoStream();
 
   if (stream && stream->isPropertySupported(XN_STREAM_PROPERTY_EMITTER_DCMOS_DISTANCE))
   {
@@ -259,7 +260,7 @@ bool OpenNI2Device::hasDepthSensor() const
 
 void OpenNI2Device::startIRStream()
 {
-  boost::shared_ptr<openni::VideoStream> stream = getIRVideoStream();
+  std::shared_ptr<openni::VideoStream> stream = getIRVideoStream();
 
   if (stream)
   {
@@ -273,7 +274,7 @@ void OpenNI2Device::startIRStream()
 
 void OpenNI2Device::startColorStream()
 {
-  boost::shared_ptr<openni::VideoStream> stream = getColorVideoStream();
+  std::shared_ptr<openni::VideoStream> stream = getColorVideoStream();
 
   if (stream)
   {
@@ -285,7 +286,7 @@ void OpenNI2Device::startColorStream()
 }
 void OpenNI2Device::startDepthStream()
 {
-  boost::shared_ptr<openni::VideoStream> stream = getDepthVideoStream();
+  std::shared_ptr<openni::VideoStream> stream = getDepthVideoStream();
 
   if (stream)
   {
@@ -365,7 +366,7 @@ bool OpenNI2Device::isDepthStreamStarted()
 
 const std::vector<OpenNI2VideoMode>& OpenNI2Device::getSupportedIRVideoModes() const
 {
-  boost::shared_ptr<openni::VideoStream> stream = getIRVideoStream();
+  std::shared_ptr<openni::VideoStream> stream = getIRVideoStream();
 
   ir_video_modes_.clear();
 
@@ -381,7 +382,7 @@ const std::vector<OpenNI2VideoMode>& OpenNI2Device::getSupportedIRVideoModes() c
 
 const std::vector<OpenNI2VideoMode>& OpenNI2Device::getSupportedColorVideoModes() const
 {
-  boost::shared_ptr<openni::VideoStream> stream = getColorVideoStream();
+  std::shared_ptr<openni::VideoStream> stream = getColorVideoStream();
 
   color_video_modes_.clear();
 
@@ -397,7 +398,7 @@ const std::vector<OpenNI2VideoMode>& OpenNI2Device::getSupportedColorVideoModes(
 
 const std::vector<OpenNI2VideoMode>& OpenNI2Device::getSupportedDepthVideoModes() const
 {
-  boost::shared_ptr<openni::VideoStream> stream = getDepthVideoStream();
+  std::shared_ptr<openni::VideoStream> stream = getDepthVideoStream();
 
   depth_video_modes_.clear();
 
@@ -447,7 +448,7 @@ const OpenNI2VideoMode OpenNI2Device::getIRVideoMode()
 {
   OpenNI2VideoMode ret;
 
-  boost::shared_ptr<openni::VideoStream> stream = getIRVideoStream();
+  std::shared_ptr<openni::VideoStream> stream = getIRVideoStream();
 
   if (stream)
   {
@@ -465,7 +466,7 @@ const OpenNI2VideoMode OpenNI2Device::getColorVideoMode()
 {
   OpenNI2VideoMode ret;
 
-  boost::shared_ptr<openni::VideoStream> stream = getColorVideoStream();
+  std::shared_ptr<openni::VideoStream> stream = getColorVideoStream();
 
   if (stream)
   {
@@ -483,7 +484,7 @@ const OpenNI2VideoMode OpenNI2Device::getDepthVideoMode()
 {
   OpenNI2VideoMode ret;
 
-  boost::shared_ptr<openni::VideoStream> stream = getDepthVideoStream();
+  std::shared_ptr<openni::VideoStream> stream = getDepthVideoStream();
 
   if (stream)
   {
@@ -499,7 +500,7 @@ const OpenNI2VideoMode OpenNI2Device::getDepthVideoMode()
 
 void OpenNI2Device::setIRVideoMode(const OpenNI2VideoMode& video_mode)
 {
-  boost::shared_ptr<openni::VideoStream> stream = getIRVideoStream();
+  std::shared_ptr<openni::VideoStream> stream = getIRVideoStream();
 
   if (stream)
   {
@@ -512,7 +513,7 @@ void OpenNI2Device::setIRVideoMode(const OpenNI2VideoMode& video_mode)
 
 void OpenNI2Device::setColorVideoMode(const OpenNI2VideoMode& video_mode)
 {
-  boost::shared_ptr<openni::VideoStream> stream = getColorVideoStream();
+  std::shared_ptr<openni::VideoStream> stream = getColorVideoStream();
 
   if (stream)
   {
@@ -525,7 +526,7 @@ void OpenNI2Device::setColorVideoMode(const OpenNI2VideoMode& video_mode)
 
 void OpenNI2Device::setDepthVideoMode(const OpenNI2VideoMode& video_mode)
 {
-  boost::shared_ptr<openni::VideoStream> stream = getDepthVideoStream();
+  std::shared_ptr<openni::VideoStream> stream = getDepthVideoStream();
 
   if (stream)
   {
@@ -538,7 +539,7 @@ void OpenNI2Device::setDepthVideoMode(const OpenNI2VideoMode& video_mode)
 
 void OpenNI2Device::setAutoExposure(bool enable)
 {
-  boost::shared_ptr<openni::VideoStream> stream = getColorVideoStream();
+  std::shared_ptr<openni::VideoStream> stream = getColorVideoStream();
 
   if (stream)
   {
@@ -554,7 +555,7 @@ void OpenNI2Device::setAutoExposure(bool enable)
 }
 void OpenNI2Device::setAutoWhiteBalance(bool enable)
 {
-  boost::shared_ptr<openni::VideoStream> stream = getColorVideoStream();
+  std::shared_ptr<openni::VideoStream> stream = getColorVideoStream();
 
   if (stream)
   {
@@ -571,7 +572,7 @@ void OpenNI2Device::setAutoWhiteBalance(bool enable)
 
 void OpenNI2Device::setExposure(int exposure)
 {
-  boost::shared_ptr<openni::VideoStream> stream = getColorVideoStream();
+  std::shared_ptr<openni::VideoStream> stream = getColorVideoStream();
 
   if (stream)
   {
@@ -589,7 +590,7 @@ bool OpenNI2Device::getAutoExposure() const
 {
   bool ret = false;
 
-  boost::shared_ptr<openni::VideoStream> stream = getColorVideoStream();
+  std::shared_ptr<openni::VideoStream> stream = getColorVideoStream();
 
   if (stream)
   {
@@ -605,7 +606,7 @@ bool OpenNI2Device::getAutoWhiteBalance() const
 {
   bool ret = false;
 
-  boost::shared_ptr<openni::VideoStream> stream = getColorVideoStream();
+  std::shared_ptr<openni::VideoStream> stream = getColorVideoStream();
 
   if (stream)
   {
@@ -621,7 +622,7 @@ int OpenNI2Device::getExposure() const
 {
   int ret = 0;
 
-  boost::shared_ptr<openni::VideoStream> stream = getColorVideoStream();
+  std::shared_ptr<openni::VideoStream> stream = getColorVideoStream();
 
   if (stream)
   {
@@ -660,13 +661,13 @@ void OpenNI2Device::setDepthFrameCallback(FrameCallbackFunction callback)
   depth_frame_listener->setCallback(callback);
 }
 
-boost::shared_ptr<openni::VideoStream> OpenNI2Device::getIRVideoStream() const
+std::shared_ptr<openni::VideoStream> OpenNI2Device::getIRVideoStream() const
 {
   if (ir_video_stream_.get() == 0)
   {
     if (hasIRSensor())
     {
-      ir_video_stream_ = boost::make_shared<openni::VideoStream>();
+      ir_video_stream_ = std::make_shared<openni::VideoStream>();
 
       const openni::Status rc = ir_video_stream_->create(*openni_device_, openni::SENSOR_IR);
       if (rc != openni::STATUS_OK)
@@ -676,13 +677,13 @@ boost::shared_ptr<openni::VideoStream> OpenNI2Device::getIRVideoStream() const
   return ir_video_stream_;
 }
 
-boost::shared_ptr<openni::VideoStream> OpenNI2Device::getColorVideoStream() const
+std::shared_ptr<openni::VideoStream> OpenNI2Device::getColorVideoStream() const
 {
   if (color_video_stream_.get() == 0)
   {
     if (hasColorSensor())
     {
-      color_video_stream_ = boost::make_shared<openni::VideoStream>();
+      color_video_stream_ = std::make_shared<openni::VideoStream>();
 
       const openni::Status rc = color_video_stream_->create(*openni_device_, openni::SENSOR_COLOR);
       if (rc != openni::STATUS_OK)
@@ -692,13 +693,13 @@ boost::shared_ptr<openni::VideoStream> OpenNI2Device::getColorVideoStream() cons
   return color_video_stream_;
 }
 
-boost::shared_ptr<openni::VideoStream> OpenNI2Device::getDepthVideoStream() const
+std::shared_ptr<openni::VideoStream> OpenNI2Device::getDepthVideoStream() const
 {
   if (depth_video_stream_.get() == 0)
   {
     if (hasDepthSensor())
     {
-      depth_video_stream_ = boost::make_shared<openni::VideoStream>();
+      depth_video_stream_ = std::make_shared<openni::VideoStream>();
 
       const openni::Status rc = depth_video_stream_->create(*openni_device_, openni::SENSOR_DEPTH);
       if (rc != openni::STATUS_OK)

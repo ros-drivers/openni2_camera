@@ -32,10 +32,7 @@
 #ifndef OPENNI2_DRIVER_H
 #define OPENNI2_DRIVER_H
 
-#include <boost/shared_ptr.hpp>
-#include <boost/cstdint.hpp>
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
+#include <functional>
 
 #include <sensor_msgs/msg/image.hpp>
 
@@ -110,8 +107,8 @@ private:
 
   void forceSetExposure();
 
-  boost::shared_ptr<OpenNI2DeviceManager> device_manager_;
-  boost::shared_ptr<OpenNI2Device> device_;
+  std::shared_ptr<OpenNI2DeviceManager> device_manager_;
+  std::shared_ptr<OpenNI2Device> device_;
 
   std::string device_id_;
   int bus_id_;
@@ -131,7 +128,7 @@ private:
   /** \brief get_serial server*/
   rclcpp::Service<openni2_camera::srv::GetSerial>::SharedPtr get_serial_server;
 
-  boost::mutex connect_mutex_;
+  std::mutex connect_mutex_;
   // published topics
   image_transport::CameraPublisher pub_color_;
   image_transport::CameraPublisher pub_depth_;
@@ -144,6 +141,8 @@ private:
 
   /** \brief Camera info manager objects. */
   std::shared_ptr<camera_info_manager::CameraInfoManager> color_info_manager_, ir_info_manager_;
+
+  OnSetParametersCallbackHandle::SharedPtr parameters_callback_;
 
   OpenNI2VideoMode ir_video_mode_;
   OpenNI2VideoMode color_video_mode_;

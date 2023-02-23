@@ -34,8 +34,6 @@
 
 #include <ostream>
 
-#include <boost/cstdint.hpp>
-
 namespace openni2_wrapper
 {
 

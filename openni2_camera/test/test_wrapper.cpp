@@ -34,6 +34,8 @@
 
 #include <iostream>
 
+#include <rclcpp/rclcpp.hpp>
+
 using namespace std;
 using namespace openni2_wrapper;
 
@@ -41,38 +43,41 @@ int ir_counter_ = 0;
 int color_counter_ = 0;
 int depth_counter_ = 0;
 
-void IRCallback(sensor_msgs::ImagePtr image)
+void IRCallback(sensor_msgs::msg::Image::SharedPtr image)
 {
   ++ir_counter_;
 }
 
-void ColorCallback(sensor_msgs::ImagePtr image)
+void ColorCallback(sensor_msgs::msg::Image::SharedPtr image)
 {
   ++color_counter_;
 }
 
-void DepthCallback(sensor_msgs::ImagePtr image)
+void DepthCallback(sensor_msgs::msg::Image::SharedPtr image)
 {
   ++depth_counter_;
 }
 
-int main()
+int main(int argc, char **argv)
 {
+  rclcpp::init(argc, argv);
+  rclcpp::Node node("test_wrapper");
+
   OpenNI2DeviceManager device_manager;
 
   std::cout << device_manager;
 
   std::shared_ptr<std::vector<std::string> > device_uris = device_manager.getConnectedDeviceURIs();
 
-  for(const std::string& uri : *device_uris)
+  for (const std::string& uri : *device_uris)
   {
-    std::shared_ptr<OpenNI2Device> device = device_manager.getDevice(uri);
+    std::shared_ptr<OpenNI2Device> device = device_manager.getDevice(uri, &node);
 
     std::cout << *device;
 
-    device->setIRFrameCallback(std::bind(&IRCallback, _1));
-    device->setColorFrameCallback(std::bind(&ColorCallback, _1));
-    device->setDepthFrameCallback(std::bind(&DepthCallback, _1));
+    device->setIRFrameCallback(std::bind(&IRCallback, std::placeholders::_1));
+    device->setColorFrameCallback(std::bind(&ColorCallback, std::placeholders::_1));
+    device->setDepthFrameCallback(std::bind(&DepthCallback, std::placeholders::_1));
 
     ir_counter_ = 0;
     color_counter_ = 0;
@@ -91,7 +96,6 @@ int main()
     std::cout<<"Number of called to ColorCallback: "<< color_counter_ << std::endl;
     std::cout<<"Number of called to DepthCallback: "<< depth_counter_ << std::endl;
   }
-
 
   return 0;
 }

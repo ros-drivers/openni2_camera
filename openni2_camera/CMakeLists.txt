@@ -55,8 +55,8 @@ ament_target_dependencies(openni2_wrapper
   rosidl_default_runtime
 )
 
-#add_executable(test_wrapper test/test_wrapper.cpp)
-#target_link_libraries(test_wrapper openni2_wrapper)
+add_executable(test_wrapper test/test_wrapper.cpp)
+target_link_libraries(test_wrapper openni2_wrapper)
 
 add_library(openni2_camera_lib SHARED
   src/openni2_driver.cpp

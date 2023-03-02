@@ -68,7 +68,7 @@ private:
 
   FrameCallbackFunction callback_;
 
-  bool user_device_timer_;
+  bool use_device_timer_;
   std::shared_ptr<OpenNI2TimerFilter> timer_filter_;
 
   rclcpp::Node* node_;  // needed for time

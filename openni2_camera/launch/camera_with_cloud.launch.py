@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright (c) 2020, Michael Ferguson
+# Copyright (c) 2020-2023, Michael Ferguson
 # All rights reserved.
 #
 # Software License Agreement (BSD License 2.0)
@@ -54,7 +54,7 @@ def generate_launch_description():
                     name='driver',
                     namespace=namespace,
                     parameters=[{'depth_registration': True},
-                                {'use_device_time': False}],
+                                {'use_device_time': True}],
                     remappings=[('depth/image', 'depth_registered/image_raw')],
                 ),
                 # Create XYZRGB point cloud

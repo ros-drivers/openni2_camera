@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright (c) 2020, Michael Ferguson
+# Copyright (c) 2020-2023, Michael Ferguson
 # All rights reserved.
 #
 # Software License Agreement (BSD License 2.0)
@@ -53,7 +53,7 @@ def generate_launch_description():
                     plugin='openni2_wrapper::OpenNI2Driver',
                     name='driver',
                     parameters=[{'depth_registration': True},
-                                {'use_device_time': False}],
+                                {'use_device_time': True}],
                     namespace=namespace,
                 ),
             ],

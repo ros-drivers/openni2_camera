@@ -160,9 +160,6 @@ protected:
   bool depth_video_started_;
 
   bool image_registration_activated_;
-
-  bool use_device_time_;
-
 };
 
 std::ostream& operator << (std::ostream& stream, const OpenNI2Device& device);

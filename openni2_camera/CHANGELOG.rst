@@ -2,6 +2,24 @@
 Changelog for package openni2_camera
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* revive the test wrapper (`#127 <https://github.com/ros-drivers/openni2_camera/issues/127>`_)
+  resolves `#123 <https://github.com/ros-drivers/openni2_camera/issues/123>`_
+* remove boost and unused files (`#122 <https://github.com/ros-drivers/openni2_camera/issues/122>`_)
+  * replace boost functionality by standard C++
+  * remove ROS nodelet metadata
+  * store parameter callback
+  * remove ROS1 node
+  * remove unused os import
+  Co-authored-by: Christian Rauch <Rauch.Christian@gmx.de>
+* fix build, target only humble and later (`#118 <https://github.com/ros-drivers/openni2_camera/issues/118>`_)
+* Capability: [CI] Add GitHub Action (`#116 <https://github.com/ros-drivers/openni2_camera/issues/116>`_)
+  * Capability: [CI] Add GitHub Action
+  * Maintenance: Update maintaner contact
+* initial port to ROS2
+* Contributors: Isaac I.Y. Saito, Michael Ferguson
+
 1.6.0 (2022-04-12)
 ------------------
 

@@ -2,8 +2,8 @@
 Changelog for package openni2_camera
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.0.0 (2023-03-01)
+------------------
 * revive the test wrapper (`#127 <https://github.com/ros-drivers/openni2_camera/issues/127>`_)
   resolves `#123 <https://github.com/ros-drivers/openni2_camera/issues/123>`_
 * remove boost and unused files (`#122 <https://github.com/ros-drivers/openni2_camera/issues/122>`_)

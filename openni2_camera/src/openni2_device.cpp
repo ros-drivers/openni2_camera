@@ -55,8 +55,7 @@ OpenNI2Device::OpenNI2Device(const std::string& device_URI,
     ir_video_started_(false),
     color_video_started_(false),
     depth_video_started_(false),
-    image_registration_activated_(false),
-    use_device_time_(false)
+    image_registration_activated_(false)
 {
   openni::Status rc = openni::OpenNI::initialize();
   if (rc != openni::STATUS_OK)

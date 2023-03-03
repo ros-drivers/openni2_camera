@@ -2,8 +2,8 @@
 Changelog for package openni2_camera
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.0.1 (2023-03-02)
+------------------
 * fix device time (`#129 <https://github.com/ros-drivers/openni2_camera/issues/129>`_)
 * add build depend on pkg-config (`#128 <https://github.com/ros-drivers/openni2_camera/issues/128>`_)
 * Contributors: Michael Ferguson

@@ -2,8 +2,8 @@
 Changelog for package openni2_camera
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.0.2 (2023-04-26)
+------------------
 * add depth_image_proc exec dep (`#131 <https://github.com/ros-drivers/openni2_camera/issues/131>`_)
   Needed when starting the camera with point cloud processing.
 * Contributors: Mario Prats

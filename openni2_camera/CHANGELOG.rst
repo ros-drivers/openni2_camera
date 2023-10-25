@@ -2,6 +2,10 @@
 Changelog for package openni2_camera
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.6.1 (2023-10-25)
+------------------
+* Fix: make subprocess output a string instead of bytes, needed in python 3.7 `#113 <https://github.com/ros-drivers/openni2_camera/issues/113>`_
+
 1.6.0 (2022-04-12)
 ------------------
 

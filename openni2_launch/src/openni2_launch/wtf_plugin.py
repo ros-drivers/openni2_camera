@@ -53,7 +53,7 @@ def _device_notfound_subproc(id_manufacturer, id_product):
                  can be wiped out. See https://github.com/ros-drivers/openni2_camera/pull/80#discussion_r193295442
     """
     device_re = re.compile("Bus\s+(?P<bus>\d+)\s+Device\s+(?P<device>\d+).+ID\s(?P<id>\w+:\w+)\s(?P<tag>.+)$", re.I)
-    df = subprocess.check_output("lsusb")
+    df = subprocess.check_output("lsusb", text=True)
     devices = []
     for i in df.split('\n'):
         if i:

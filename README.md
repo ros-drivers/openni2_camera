@@ -12,7 +12,8 @@ Branching:
    - Latest: [ros1](https://github.com/ros-drivers/openni2_camera/tree/ros1)
    - For ROS [Jade](http://wiki.ros.org/jade), [Indigo](http://wiki.ros.org/indigo) or earlier: [indigo-devel](https://github.com/ros-drivers/openni2_camera/tree/indigo-devel)
 - ROS2:
-   - The [ros2](https://github.com/ros-drivers/openni2_camera/tree/ros2) branch supports Humble and later
+   - The [ros2](https://github.com/ros-drivers/openni2_camera/tree/ros2) branch supports Jazzy and later
+   - The [iron](https://github.com/ros-drivers/openni2_camera/tree/iron) branch supports Humble to Iron
    - openni2_launch has NOT been ported since proper lazy subscribers are still not possible in ROS2
 
 ## Developer document

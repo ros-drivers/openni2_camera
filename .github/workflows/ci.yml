@@ -10,7 +10,7 @@ jobs:
       matrix:
         env:
           - {ROS_DISTRO: humble, ROS_REPO: ros, ABICHECK_URL: "github:ros-drivers/openni2_camera#ros2"}
-          - {ROS_DISTRO: rolling, ROS_REPO: ros, ABICHECK_URL: "github:ros-drivers/openni2_camera#ros2"}
+          - {ROS_DISTRO: iron, ROS_REPO: ros, ABICHECK_URL: "github:ros-drivers/openni2_camera#ros2"}
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v2

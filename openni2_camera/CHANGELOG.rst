@@ -2,6 +2,17 @@
 Changelog for package openni2_camera
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* implement proper lazy subscribers (`#136 <https://github.com/ros-drivers/openni2_camera/issues/136>`_)
+  Fixes `#119 <https://github.com/ros-drivers/openni2_camera/issues/119>`_, works in Jazzy and later
+* publish tfs and set matching frame names (`#135 <https://github.com/ros-drivers/openni2_camera/issues/135>`_)
+  This PR ports the TFs from original
+  [`kinect_frames.launch`](https://github.com/ros-drivers/rgbd_launch/blob/noetic-devel/launch/kinect_frames.launch)
+  to the ROS 2 launch files and sets the image frame names appropriately.
+* Depth-only point cloud launch file for Non-RGB PrimeSense device. (`#132 <https://github.com/ros-drivers/openni2_camera/issues/132>`_)
+* Contributors: Christian Rauch, Michael Ferguson, TinLethax
+
 2.0.2 (2023-04-26)
 ------------------
 * add depth_image_proc exec dep (`#131 <https://github.com/ros-drivers/openni2_camera/issues/131>`_)

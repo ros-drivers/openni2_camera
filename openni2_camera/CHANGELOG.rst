@@ -2,8 +2,8 @@
 Changelog for package openni2_camera
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.1.0 (2024-02-14)
+------------------
 * implement proper lazy subscribers (`#136 <https://github.com/ros-drivers/openni2_camera/issues/136>`_)
   Fixes `#119 <https://github.com/ros-drivers/openni2_camera/issues/119>`_, works in Jazzy and later
 * publish tfs and set matching frame names (`#135 <https://github.com/ros-drivers/openni2_camera/issues/135>`_)

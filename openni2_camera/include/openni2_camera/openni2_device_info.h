@@ -33,6 +33,7 @@
 #define OPENNI2_DEVICE_INFO_H_
 
 #include <ostream>
+#include <cstdint>
 
 namespace openni2_wrapper
 {

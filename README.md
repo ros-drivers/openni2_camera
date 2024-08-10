@@ -40,14 +40,11 @@ ros2 launch openni2_camera camera_with_cloud.launch.py
  * The nodelet has been refactored into an rclcpp component called
    "openni2_wrapper::OpenNI2Driver". See the launch folder for an example
    of how to start this.
- * Since most components in image_proc/depth_image_proc lack lazy pub/sub,
-   the advanced processing graphs in rgbd_launch and openni2_launch are not
-   currently feasible. It is recommended to create a launch file with the
-   specific pipeline you want. See the launch folder for an example.
+ * rgbd_launch and openni2_launch have not yet been ported (although it
+   is now possible since lazy pub/sub is implemented). It is recommended
+   to create a launch file with the specific pipeline you want.
+   See the launch folder for an example.
 
 ## Known Issues
 
- * There are currently no subscriber connect/disconnect callbacks in ROS2.
-   This package implements a lazy publisher by running a 1Hz update loop
-   and seeing if there are new subscribers.
  * Using "use_device_time" is currently broken.

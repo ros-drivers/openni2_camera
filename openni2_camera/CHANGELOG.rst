@@ -2,6 +2,18 @@
 Changelog for package openni2_camera
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* rename depth/image_raw to depth_raw/image (`#140 <https://github.com/ros-drivers/openni2_camera/issues/140>`_)
+  Without this change, both depth/image and depth/image_raw publish the
+  same camera_info topic (depth/camera_info) - this has several issues:
+  * subscribing to either image causes both to be published along with
+  their respective camera_info
+  * remapping either camera_info, remaps both
+  * In Jazzy, it appears that the double camera_info also causes minor
+  issues with message_filters in downstream packages
+* Contributors: Michael Ferguson
+
 2.2.0 (2024-03-14)
 ------------------
 * fix build on Ubuntu Noble (24.04) (`#138 <https://github.com/ros-drivers/openni2_camera/issues/138>`_)

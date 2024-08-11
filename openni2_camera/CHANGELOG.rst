@@ -2,8 +2,8 @@
 Changelog for package openni2_camera
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.2.1 (2024-08-11)
+------------------
 * rename depth/image_raw to depth_raw/image (`#140 <https://github.com/ros-drivers/openni2_camera/issues/140>`_)
   Without this change, both depth/image and depth/image_raw publish the
   same camera_info topic (depth/camera_info) - this has several issues:

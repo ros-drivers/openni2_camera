@@ -2,8 +2,8 @@
 Changelog for package openni2_camera
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.0.3 (2024-11-03)
+------------------
 * add dynamic parameters (backport `#141 <https://github.com/ros-drivers/openni2_camera/issues/141>`_) (`#142 <https://github.com/ros-drivers/openni2_camera/issues/142>`_)
   In ROS 1, a number of things were dynamic - this PR re-adds them using
   the new ROS 2 paradigm for parameter updating. I've tested this with a

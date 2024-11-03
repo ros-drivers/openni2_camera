@@ -212,7 +212,52 @@ rcl_interfaces::msg::SetParametersResult OpenNI2Driver::paramCb(
 {
   auto result = rcl_interfaces::msg::SetParametersResult();
 
-  RCLCPP_WARN(this->get_logger(), "parameter change callback");
+  // Assume success until we fail
+  result.successful = true;
+
+  // Apply parameters
+  for (const auto & param : parameters)
+  {
+    if (param.get_name() == "z_offset_mm")
+    {
+      z_offset_mm_ = param.as_int();
+    }
+    else if (param.get_name() == "z_scaling")
+    {
+      z_scaling_ = param.as_double();
+    }
+    else if (param.get_name() == "ir_time_offset")
+    {
+      ir_time_offset_ = param.as_double();
+    }
+    else if (param.get_name() == "color_time_offset")
+    {
+      color_time_offset_ = param.as_double();
+    }
+    else if (param.get_name() == "depth_time_offset")
+    {
+      depth_time_offset_ = param.as_double();
+    }
+    else if (param.get_name() == "auto_exposure")
+    {
+      auto_exposure_ = param.as_bool();
+    }
+    else if (param.get_name() == "auto_white_balance")
+    {
+      auto_white_balance_ = param.as_bool();
+    }
+    else if (param.get_name() == "exposure")
+    {
+      exposure_ = param.as_int();
+    }
+    else
+    {
+      RCLCPP_WARN(this->get_logger(), "Parameter %s is not settable", param.get_name().c_str());
+      result.successful = false;
+    }
+  }
+
+  applyConfigToOpenNIDevice();
   return result;
 }
 
@@ -273,11 +318,7 @@ void OpenNI2Driver::applyConfigToOpenNIDevice()
   {
     try
     {
-      //if (!config_init_ || (old_config_.depth_registration != depth_registration_))
-      if (depth_registration_)
-      {
-        device_->setImageRegistrationMode(depth_registration_);
-      }
+      device_->setImageRegistrationMode(depth_registration_);
     }
     catch (const OpenNI2Exception& exception)
     {
@@ -287,9 +328,7 @@ void OpenNI2Driver::applyConfigToOpenNIDevice()
 
   try
   {
-    //if (!config_init_ || (old_config_.color_depth_synchronization != color_depth_synchronization_))
-    if (color_depth_synchronization_)
-      device_->setDepthColorSync(color_depth_synchronization_);
+    device_->setDepthColorSync(color_depth_synchronization_);
   }
   catch (const OpenNI2Exception& exception)
   {
@@ -298,9 +337,7 @@ void OpenNI2Driver::applyConfigToOpenNIDevice()
 
   try
   {
-    //if (!config_init_ || (old_config_.auto_exposure != auto_exposure_))
-    if (auto_exposure_)
-      device_->setAutoExposure(auto_exposure_);
+    device_->setAutoExposure(auto_exposure_);
   }
   catch (const OpenNI2Exception& exception)
   {
@@ -309,9 +346,7 @@ void OpenNI2Driver::applyConfigToOpenNIDevice()
 
   try
   {
-    //if (!config_init_ || (old_config_.auto_white_balance != auto_white_balance_))
-    if (auto_white_balance_)
-      device_->setAutoWhiteBalance(auto_white_balance_);
+    device_->setAutoWhiteBalance(auto_white_balance_);
   }
   catch (const OpenNI2Exception& exception)
   {
@@ -331,7 +366,6 @@ void OpenNI2Driver::applyConfigToOpenNIDevice()
     // Setting the exposure the old way, although this should not have an effect
     try
     {
-      //if (!config_init_ || (old_config_.exposure != exposure_))
       device_->setExposure(exposure_);
     }
     catch (const OpenNI2Exception& exception)

@@ -2,6 +2,15 @@
 Changelog for package openni2_camera
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* add dynamic parameters (`#141 <https://github.com/ros-drivers/openni2_camera/issues/141>`_)
+  In ROS 1, a number of things were dynamic - this PR re-adds them using
+  the new ROS 2 paradigm for parameter updating. I've tested this with a
+  Primesense device and am able to disable auto_exposure and
+  auto_white_balance.
+* Contributors: Michael Ferguson
+
 2.2.1 (2024-08-11)
 ------------------
 * rename depth/image_raw to depth_raw/image (`#140 <https://github.com/ros-drivers/openni2_camera/issues/140>`_)

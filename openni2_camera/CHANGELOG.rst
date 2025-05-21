@@ -2,6 +2,13 @@
 Changelog for package openni2_camera
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Replace ament_target_dependencies with target_link_libraries (`#145 <https://github.com/ros-drivers/openni2_camera/issues/145>`_)
+  `ament_target_dependencies` is deprecated, it will require a release on
+  `rolling`
+* Contributors: Alejandro Hernández Cordero
+
 2.2.2 (2024-11-03)
 ------------------
 * add dynamic parameters (`#141 <https://github.com/ros-drivers/openni2_camera/issues/141>`_)

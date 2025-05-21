@@ -45,14 +45,13 @@ add_library(openni2_wrapper SHARED
 target_link_libraries(openni2_wrapper
   ${PC_OPENNI2_LIBRARIES}
 )
-ament_target_dependencies(openni2_wrapper
-  builtin_interfaces
-  camera_info_manager
-  image_transport
-  sensor_msgs
-  rclcpp
-  rclcpp_components
-  rosidl_default_runtime
+target_link_libraries(openni2_wrapper
+  ${builtin_interfaces_TARGETS}
+  camera_info_manager::camera_info_manager
+  image_transport::image_transport
+  ${sensor_msgs_TARGETS}
+  rclcpp::rclcpp
+  rclcpp_components::component
 )
 
 add_executable(test_wrapper test/test_wrapper.cpp)
@@ -64,11 +63,11 @@ add_library(openni2_camera_lib SHARED
 target_link_libraries(openni2_camera_lib
   openni2_wrapper
 )
-ament_target_dependencies(openni2_camera_lib
-  camera_info_manager
-  image_transport
-  sensor_msgs
-  rclcpp
+target_link_libraries(openni2_camera_lib
+  camera_info_manager::camera_info_manager
+  image_transport::image_transport
+  ${sensor_msgs_TARGETS}
+  rclcpp::rclcpp
 )
 rosidl_get_typesupport_target(cpp_typesupport_target
   ${PROJECT_NAME} "rosidl_typesupport_cpp")
@@ -121,4 +120,3 @@ ament_export_dependencies(
   rclcpp
 )
 ament_package()
-

@@ -723,7 +723,7 @@ void OpenNI2Driver::readConfigFromParameterServer()
 
 }
 
-std::string OpenNI2Driver::resolveDeviceURI(const std::string& device_id) throw(OpenNI2Exception)
+std::string OpenNI2Driver::resolveDeviceURI(const std::string& device_id)
 {
   // retrieve available device URIs, they look like this: "1d27/0601@1/5"
   // which is <vendor ID>/<product ID>@<bus number>/<device number>

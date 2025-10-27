@@ -49,7 +49,7 @@ namespace openni2_wrapper
 class OpenNI2DeviceInfoComparator
 {
 public:
-  bool operator()(const OpenNI2DeviceInfo& di1, const OpenNI2DeviceInfo& di2)
+  bool operator()(const OpenNI2DeviceInfo& di1, const OpenNI2DeviceInfo& di2) const
   {
     return (di1.uri_.compare(di2.uri_) < 0);
   }

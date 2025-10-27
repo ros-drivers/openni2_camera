@@ -1,4 +1,13 @@
 cmake_minimum_required(VERSION 2.8.3)
+
+if(DEFINED ENV{ROS_DISTRO})
+  if($ENV{ROS_DISTRO} STREQUAL "one")
+    set(CMAKE_CXX_STANDARD 17)
+    set(CMAKE_CXX_STANDARD_REQUIRED ON)
+  endif()
+endif()
+
+add_definitions(-DBOOST_BIND_GLOBAL_PLACEHOLDERS)
 project(openni2_camera)
 
 find_package(catkin REQUIRED camera_info_manager dynamic_reconfigure image_transport  nodelet sensor_msgs roscpp message_generation)
